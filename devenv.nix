@@ -3,6 +3,8 @@
     pkgs.flyctl
   ];
 
+  env.LD_LIBRARY_PATH = "";
+
   languages.python = {
     enable = true;
     venv.enable = true;
@@ -42,7 +44,7 @@
   processes.backend.exec = "uvicorn main:app --reload";
   processes.frontend.exec = "cd frontend && elm-land server";
 
-  containers.processes.name = "flakestry.dev";
+  containers.processes.name = "flakestry";
   containers.processes.registry = "docker://registry.fly.io/";
   containers.processes.defaultCopyArgs = [
     "--dest-creds"

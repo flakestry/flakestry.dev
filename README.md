@@ -27,6 +27,7 @@ In summary, the Nix community sees potential in the flakes system as a way to im
 ## Development
 
 1. [Install direnv](https://direnv.net/docs/installation.html)
+2. `nix profile install --accept-flake-config tarball+https://install.devenv.sh/latest`
 2. `direnv allow .`
 
 ## TODO
