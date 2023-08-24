@@ -11,9 +11,13 @@
   };
 
   processes.backend.exec = "uvicorn main:app --reload";
-  processes.frontend.exec = "elm-land server";
+  processes.frontend.exec = "cd frontend && elm-land server";
 
-  pre-commit.hooks.shellcheck.enable = true;
-  #pre-commit.hooks.shellcheck.args = [ "--exclude=SC1090" ];
-  pre-commit.hooks.ruff.enable = true;
+  pre-commit.hooks = {
+    shellcheck.enable = true;
+    #shellcheck.args = [ "--exclude=SC1090" ];
+    nixpkgs-fmt.enable = true;
+    ruff.enable = true;
+    elm-format.enable = true;
+  };
 }
