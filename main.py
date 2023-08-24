@@ -1,11 +1,8 @@
-from typing import Union
 
 from fastapi import FastAPI
 
 app = FastAPI()
 
-from fastapi_oidc import IDToken
-from fastapi_oidc import get_auth
 
 OIDC_config = {
     "client_id": "",
@@ -30,18 +27,13 @@ def read_search():
 
 @app.get("/flake/{org}")
 def read_org(org: str):
-    return {"item_id": item_id, "q": q}
+    return {}
 
 @app.get("/flake/{org}/{repo}")
-def read_org(org: str, repo: str):
-    return {"item_id": item_id, "q": q}
-
-@app.get("/flake/{org}/{repo}")
-def read_org(org: str, repo: str):
-    return {"item_id": item_id, "q": q}
+def read_repo(org: str, repo: str):
+    return {}
 
 @app.get("/publish")
-def read_item(version: str, q: Union[str, None] = None):
-    # verify JWT
-    # TODO: upload source to an S3 bucket
-    return {"item_id": item_id, "q": q}
+def read_item(version: str):
+    # verify OIDC
+    return {}
