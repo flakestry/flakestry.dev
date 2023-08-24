@@ -35,7 +35,7 @@
 
   enterShell = ''
     export PATH="${config.devenv.root}/node_modules/.bin:$PATH"
-  '' ++ lib.optionalString config.container.isBuilding ''
+  '' + lib.optionalString config.container.isBuilding ''
     cd frontend && elm-land build
   '';
 
