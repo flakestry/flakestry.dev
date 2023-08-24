@@ -7,7 +7,7 @@
     "env": [],
     "html": {
       "attributes": {
-        "html": { "lang": "en" },
+        "html": { "lang": "en", "class": "h-screen" },
         "head": {}
       },
       "title": "Elm Land",
