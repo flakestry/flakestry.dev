@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 app = FastAPI()
 
@@ -36,3 +37,5 @@ def read_repo(org: str, repo: str):
 def read_item(version: str):
     # verify OIDC
     return {}
+
+FastAPIInstrumentor.instrument_app(app)

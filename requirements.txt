@@ -1,2 +1,5 @@
 fastapi
 fastapi_oidc
+opentelemetry-instrumentation-fastapi
+uvicorn
+sqlalchemy
