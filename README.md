@@ -36,7 +36,7 @@ In summary, the Nix community sees potential in the flakes system as a way to im
 - [ ] /flake
 - [ ] /flake/{owner}
 - [ ] /flake/{owner}/{repo}
-- [ ] /search
+- [ ] /search (opensearch)
 - [ ] fly.io deployment: staging.flakestry.dev, flakestry.dev
 
 ## Roadmap
