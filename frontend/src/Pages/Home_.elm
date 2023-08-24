@@ -10,7 +10,7 @@ page =
     { title = "flakestry"
     , body =
         [ nav
-            [ class "bg-blue-600 text-white p-4"
+            [ class "text-black p-4"
             ]
             [ div
                 [ class "container mx-auto"
@@ -18,23 +18,18 @@ page =
                 [ div
                     [ class "flex justify-between items-center"
                     ]
-                    [ img [ src "https://raw.githubusercontent.com/NixOS/nixos-artwork/master/logo/nix-snowflake.svg", class "w-4" ] []
-                    , a
-                        [ href "/"
-                        , class "text-2xl font-bold"
+                    [ div [ class "flex space-x-4" ]
+                        [ img [ src "https://raw.githubusercontent.com/NixOS/nixos-artwork/master/logo/nix-snowflake.svg", class "w-8" ] []
+                        , a
+                            [ href "/"
+                            , class "text-2xl font-bold"
+                            ]
+                            [ text "Flakestry" ]
                         ]
-                        [ text "Flakestry" ]
                     , ul
                         [ class "flex space-x-4"
                         ]
                         [ li []
-                            [ a
-                                [ href "/"
-                                , class "hover:underline"
-                                ]
-                                [ text "Home" ]
-                            ]
-                        , li []
                             [ a
                                 [ href "#"
                                 , class "hover:underline"
@@ -50,27 +45,27 @@ page =
                         ]
                     ]
                 ]
-            , {- Content -}
-              main_
-                [ class "container mx-auto mt-10"
+            ]
+        , {- Content -}
+          main_
+            [ class "container w-auto bg-slate-50 p-24 h-full flex-1"
+            ]
+            [ h1
+                [ class "text-3xl font-semibold mb-4"
                 ]
-                [ h1
-                    [ class "text-3xl font-semibold mb-4"
-                    ]
-                    [ text "Welcome to flakestry!" ]
-                , p []
-                    [ text "here goes flakes" ]
+                [ text "Welcome to flakestry!" ]
+            , p []
+                [ text "Here goes flakes ..." ]
+            ]
+        , {- Footer -}
+          footer
+            [ class "bg-blue-950 text-white p-4"
+            ]
+            [ div
+                [ class "container mx-auto text-center"
                 ]
-            , {- Footer -}
-              footer
-                [ class "bg-blue-600 text-white p-4 mt-10"
-                ]
-                [ div
-                    [ class "container mx-auto text-center"
-                    ]
-                    [ p []
-                        [ text "Read more about this project <here>." ]
-                    ]
+                [ p []
+                    [ text "Read more about this project <here>." ]
                 ]
             ]
         ]
