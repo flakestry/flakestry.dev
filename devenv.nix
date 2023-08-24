@@ -15,10 +15,28 @@
   };
 
   services.opensearch.enable = true;
-  services.postgres.enable = true;
+  services.postgres.enable = !config.container.isBuilding;
+  services.caddy.enable = true;
+  services.caddy.virtualHosts."http://localhost:8888" = {
+    extraConfig = ''
+      root * ${config.devenv.root}/frontend/dist
+
+      handle_path /api/* {
+        reverse_proxy localhost:8000
+      }
+      
+      ${ if config.container.isBuilding then ''
+        file_server
+      '' else ''
+        reverse_proxy localhost:5200
+      ''}
+    '';
+  };
 
   enterShell = ''
     export PATH="${config.devenv.root}/node_modules/.bin:$PATH"
+  '' ++ lib.optionalString config.container.isBuilding ''
+    cd frontend && elm-land build
   '';
 
   processes.backend.exec = "uvicorn main:app --reload";

@@ -13,8 +13,8 @@ OIDC_config = {
     "signature_cache_ttl": 3600,
 }
 
-@app.post("/flakes")
-def post_flakes():
+@app.get("/flakes")
+def get_flakes():
     return {"flakes": [
 
     ]}
