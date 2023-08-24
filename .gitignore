@@ -1,0 +1,3 @@
+.devenv*
+node_modules
+.pre-commit*
