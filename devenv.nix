@@ -16,6 +16,8 @@
     npm.install.enable = true;
   };
 
+  languages.elm.enable = true;
+
   services.opensearch.enable = true;
   services.postgres.enable = !config.container.isBuilding;
   services.caddy.enable = true;
@@ -26,7 +28,7 @@
       handle_path /api/* {
         reverse_proxy localhost:8000
       }
-      
+
       ${ if config.container.isBuilding then ''
         file_server
       '' else ''
