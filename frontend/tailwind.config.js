@@ -1,14 +1,18 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-    content: [
-      "./src/**/*.{js,elm,ts,css,html}",
-      "./.elm-land/**/*.{js,elm,ts,css,html}"
-    ],
-    theme: {
-      extend: {},
+  content: [
+    "./src/**/*.{js,elm,ts,css,html}",
+    "./.elm-land/**/*.{js,elm,ts,css,html}"
+  ],
+  theme: {
+    container: {
+      center: true,
+      padding: '2rem',
     },
-    plugins: [
-      require(`@tailwindcss/forms`),
-      require(`@tailwindcss/typography`)
-    ],
-  }
+    extend: {},
+  },
+  plugins: [
+    require(`@tailwindcss/forms`),
+    require(`@tailwindcss/typography`)
+  ],
+}
