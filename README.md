@@ -36,9 +36,9 @@ In summary, the Nix community sees potential in the flakes system as a way to im
 
 3. Load the development environment:
 
-  ```bash
-  direnv allow
-  ```
+   ```bash
+   direnv allow
+   ```
 
 4. Start the development server:
 
