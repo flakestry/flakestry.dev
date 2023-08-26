@@ -64,7 +64,7 @@ viewNav =
                 [ class "flex justify-between items-center"
                 ]
                 [ div [ class "flex space-x-2" ]
-                    [ img [ src "https://raw.githubusercontent.com/NixOS/nixos-artwork/master/logo/nix-snowflake.svg", class "w-7" ] []
+                    [ img [ src "/logo.png", class "w-7" ] []
                     , a
                         [ href "/"
                         , class "text-xl font-bold tracking-tight"
