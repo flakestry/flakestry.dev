@@ -14,22 +14,20 @@ page =
         [ viewNav
         , {- Content -}
           main_
-            [ class ""
+            [ class "h-screen"
             ]
             [ div
-                [ class "container py-24 max-w-4xl" ]
+                [ class "container py-24 max-w-5xl" ]
                 [ h1
-                    [ class "text-4xl font-semibold mb-4"
+                    [ class "text-4xl font-semibold md:text-center"
                     ]
-                    [ text "Find, Install, and Publish Nix Flakes" ]
-                , p [ class "pb-8" ]
-                    [ text "Here goes flakes ..." ]
-                , label [ class "relative block" ]
+                    [ text "Find, Install, and Publish Nix Flakes." ]
+                , label [ class "max-w-3xl mx-auto relative block mt-8" ]
                     [ span [ class "sr-only" ] [ text "Search" ]
                     , span [ class "absolute inset-y-0 left-0 flex items-center pl-4" ]
                         [ Svg.svg
                             [ SvgAttr.viewBox "0 0 20 20"
-                            , SvgAttr.class "h-6 w-6 fill-slate-300"
+                            , SvgAttr.class "h-6 w-6 fill-slate-400"
                             ]
                             [ Svg.path
                                 [ SvgAttr.fillRule "evenodd"
@@ -40,7 +38,7 @@ page =
                             ]
                         ]
                     , input
-                        [ class "placeholder:text-slate-400 text-lg block bg-white w-full border border-slate-300 rounded-md py-4 pl-14 pr-3 shadow-sm focus:outline-none focus:border-sky-500 focus:ring-sky-500 focus:ring-1"
+                        [ class "placeholder:text-slate-400 text-lg block bg-white w-full border border-slate-300 rounded-md py-4 pl-14 pr-3 shadow-md focus:outline-none focus:border-sky-500 focus:ring-sky-500 focus:ring-1"
                         , placeholder "⌘ K to search for flakes..."
                         , type_ "text"
                         , name "search"
@@ -60,7 +58,7 @@ viewNav =
         [ class "py-4"
         ]
         [ div
-            [ class "container max-w-4xl"
+            [ class "container max-w-5xl"
             ]
             [ div
                 [ class "flex justify-between items-center"
@@ -75,7 +73,7 @@ viewNav =
                     ]
                 , div [ class "flex" ]
                     [ ul
-                        [ class "flex items-center space-x-6 mr-6 text-sm leading-6 font-semibold"
+                        [ class "flex items-center space-x-10 mr-10 text-sm leading-6 font-medium text-slate-800"
                         ]
                         [ li [ class "hover:text-sky-500" ]
                             [ a
@@ -88,18 +86,18 @@ viewNav =
                             ]
                         ]
                     , div [ class "flex items-center space-x-2" ]
-                        [ button [ class "bg-blue-950 text-white text-sm font-bold py-1 px-4 rounded hover:bg-blue-600 inline-flex items-center py-2" ]
+                        [ button [ class "bg-blue-900 text-white text-sm pl-2 pr-3 py-2 cursor-pointer shadow-sm rounded hover:bg-blue-600 inline-flex items-center" ]
                             [ Svg.svg
-                                [ SvgAttr.fill "none"
-                                , SvgAttr.viewBox "0 0 24 24"
-                                , SvgAttr.strokeWidth "2"
-                                , SvgAttr.stroke "currentColor"
-                                , SvgAttr.class "w-5 h-5 mr-2"
+                                [ SvgAttr.fill "currentColor"
+                                , SvgAttr.viewBox "0 0 20 20"
+                                , SvgAttr.class "w-4 h-4 mr-2"
                                 ]
                                 [ Svg.path
-                                    [ SvgAttr.strokeLinecap "round"
-                                    , SvgAttr.strokeLinejoin "round"
-                                    , SvgAttr.d "M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                                    [ SvgAttr.d "M9.25 13.25a.75.75 0 001.5 0V4.636l2.955 3.129a.75.75 0 001.09-1.03l-4.25-4.5a.75.75 0 00-1.09 0l-4.25 4.5a.75.75 0 101.09 1.03L9.25 4.636v8.614z"
+                                    ]
+                                    []
+                                , Svg.path
+                                    [ SvgAttr.d "M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z"
                                     ]
                                     []
                                 ]
@@ -115,12 +113,18 @@ viewNav =
 viewFooter : Html msg
 viewFooter =
     footer
-        [ class "bg-blue-950 text-white p-4 fixed w-full bottom-0"
+        [ class "text-sm pb-16 leading-6"
         ]
         [ div
-            [ class "container max-w-4xl"
+            [ class "container max-w-5xl border-t border-slate-300 pt-8"
             ]
-            [ p []
-                [ text "Read more about this project <here>." ]
+            [ div [ class "flex-none w-1/2 space-y-10 sm:space-y-8" ]
+                [ h2 [ class "font-medium" ] [ text "Getting Started" ]
+                , ul [ class "mt-3 space-y-2" ]
+                    [ li []
+                        [ text "What's Nix?" ]
+                    , li [] [ text "What are Flakes?" ]
+                    ]
+                ]
             ]
         ]

@@ -7,7 +7,7 @@
     "env": [],
     "html": {
       "attributes": {
-        "html": { "lang": "en", "class": "h-screen" },
+        "html": { "lang": "en", "class": "h-screen bg-slate-50" },
         "head": {}
       },
       "title": "Elm Land",
@@ -16,7 +16,9 @@
         { "http-equiv": "X-UA-Compatible", "content": "IE=edge" },
         { "name": "viewport", "content": "width=device-width, initial-scale=1.0" }
       ],
-      "link": [],
+      "link": [
+        { "rel": "stylesheet", "href": "https://rsms.me/inter/inter.css" }
+      ],
       "script": []
     },
     "router": {
