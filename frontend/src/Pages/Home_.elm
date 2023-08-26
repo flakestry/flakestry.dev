@@ -86,7 +86,7 @@ viewNav =
                             ]
                         ]
                     , div [ class "flex items-center space-x-2" ]
-                        [ button [ class "bg-blue-900 text-white text-sm pl-2 pr-3 py-2 cursor-pointer shadow-sm rounded hover:bg-blue-600 inline-flex items-center" ]
+                        [ button [ class "bg-blue-900 text-white text-sm font-medium pl-2 pr-3 py-2 cursor-pointer shadow-sm rounded hover:bg-blue-600 inline-flex items-center" ]
                             [ Svg.svg
                                 [ SvgAttr.fill "currentColor"
                                 , SvgAttr.viewBox "0 0 20 20"
