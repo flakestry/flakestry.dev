@@ -28,13 +28,12 @@ Built using [elm.land](https://elm.land/) and [FastAPI](https://fastapi.tiangolo
 
 ## TODO
 
+- [ ] fly.io deployment: staging.flakestry.dev, flakestry.dev
 - [ ] action to publish: evaluate, get flake metadata, outputs
 - [ ] /publish
-- [ ] /flake
-- [ ] /flake/{owner}
-- [ ] /flake/{owner}/{repo}
+- [ ] /flake/github/{owner}
+- [ ] /flake/github/{owner}/{repo}
 - [ ] /search (opensearch)
-- [ ] fly.io deployment: staging.flakestry.dev, flakestry.dev
 
 ## Roadmap
 
