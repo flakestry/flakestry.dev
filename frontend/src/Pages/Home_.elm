@@ -22,7 +22,7 @@ page =
                 [ h1
                     [ class "text-4xl font-semibold md:text-center"
                     ]
-                    [ text "Find, Install, and Publish Nix Flakes." ]
+                    [ text "Find, Install, and Publish ", a [ href "https://nix.dev/concepts/flakes#flakes", class "text-blue-900" ] [ text "Nix Flakes" ], text "." ]
                 , label [ class "max-w-3xl mx-auto relative block mt-8" ]
                     [ span [ class "sr-only" ] [ text "Search" ]
                     , span [ class "absolute inset-y-0 left-0 flex items-center pl-4" ]
