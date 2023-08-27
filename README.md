@@ -1,6 +1,6 @@
-# flakestry.dev
+# [flakestry.dev](https://flakestry.dev)
 
-A public registry of Nix flakes aiming to replace [search.nixos.org](https://search.nixos.org/flakes).
+A public registry of Nix flakes aiming to supercede [search.nixos.org](https://search.nixos.org/flakes).
 
 Built using [elm.land](https://elm.land/) and [FastAPI](https://fastapi.tiangolo.com/).
 
