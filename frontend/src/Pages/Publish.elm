@@ -12,9 +12,7 @@ page =
     { title = "flakestry - Publish"
     , body =
         [ Flakestry.Layout.viewNav
-        , main_
-            [ class "h-screen"
-            ]
+        , main_ []
             [ div
                 [ class "container py-24 max-w-5xl" ]
                 [ h1
