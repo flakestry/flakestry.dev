@@ -16,21 +16,17 @@ viewNav =
             [ div
                 [ class "flex justify-between items-center"
                 ]
-                [ div [ class "flex space-x-2" ]
+                [ a [ href "/", class "flex space-x-2 text-xl font-bold tracking-tight" ]
                     [ img [ src "/logo.png", class "w-7" ] []
-                    , a
-                        [ href "/"
-                        , class "text-xl font-bold tracking-tight"
-                        ]
-                        [ text "Flakestry" ]
+                    , span [] [ text "Flakestry" ]
                     ]
                 , div [ class "flex" ]
                     [ ul
-                        [ class "flex items-center space-x-10 mr-10 text-sm leading-6 font-medium text-slate-800"
+                        [ class "flex items-center space-x-8 mr-5 text-sm leading-6 font-medium text-slate-800"
                         ]
                         [ li [ class "hover:text-sky-500" ]
                             [ a
-                                [ href "/about" ]
+                                [ href "/about", class "px-4 py-2" ]
                                 [ text "About" ]
                             ]
                         ]
