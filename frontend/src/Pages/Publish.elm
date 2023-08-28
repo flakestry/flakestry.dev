@@ -20,11 +20,11 @@ page =
                 [ h1
                     [ class "text-4xl font-semibold md:text-center"
                     ]
-                    [ text "Publish your Flake on each release" ]
+                    [ text "Publish your Flake for each tag:" ]
                 , h2
-                    [ class "text-2xl md:text-center mt-12 mb-4"
+                    [ class "text-2xl md:text-center mt-12 mb-4 "
                     ]
-                    [ text ".github/workflows/publish.yaml" ]
+                    [ span [ class "text-white bg-black p-2" ] [ text ".github/workflows/publish.yaml" ] ]
                 , pre [] [ Markdown.toHtml [ class "content  p-4 bg-black" ] """
 ```yaml
 name: "Publish a flake to flakestry"
