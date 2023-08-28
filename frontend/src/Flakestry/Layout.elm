@@ -52,16 +52,21 @@ viewFooter =
         [ class "text-sm pb-16 leading-6"
         ]
         [ div
-            [ class "container max-w-5xl border-t border-slate-300 pt-8"
+            [ class "container max-w-5xl"
             ]
-            [ div [ class "flex-none w-1/2 space-y-10 sm:space-y-8" ]
-                [ h2 [ class "font-medium" ] [ text "Getting Started" ]
-                , ul [ class "mt-3 space-y-2" ]
-                    [ li [] [ a [ href "https://nix.dev/concepts/flakes#flakes" ] [ text "What are Flakes?" ] ]
+            [ div [ class "flex border-t border-slate-300 pt-8" ]
+                [ div [ class "flex-none w-1/2 space-y-10 sm:space-y-8" ]
+                    [ h2 [ class "font-medium" ] [ text "Getting Started" ]
+                    , ul [ class "mt-3 space-y-2" ]
+                        [ li [] [ a [ href "https://nix.dev/concepts/flakes#flakes", class "hover:text-blue-500" ] [ text "What are Flakes?" ] ]
+                        ]
                     ]
-                , ul []
-                    [ Octicons.defaultOptions |> Octicons.class "inline mx-2" |> Octicons.markGithub
-                    , a [ href "https://github.com/flakestry/flakestry.dev" ] [ text "Source Code" ]
+                , div [ class "flex-none w-1/2 space-y-10 sm:space-y-8" ]
+                    [ h2 [ class "font-medium" ] [ text "Resources" ]
+                    , a [ href "https://github.com/flakestry/flakestry.dev", class "flex items-center hover:text-blue-500 hover:fill-blue-500" ]
+                        [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline mr-2" |> Octicons.markGithub
+                        , span [] [ text "Source Code" ]
+                        ]
                     ]
                 ]
             ]
