@@ -1,5 +1,6 @@
 module Pages.Home_ exposing (page)
 
+import Components.FlakeCard
 import Flakestry.Layout
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -51,16 +52,16 @@ page =
                     , span [ class "ml-2" ] [ text "Recently released flakes" ]
                     ]
                 , div [ class "flex flex-col space-y-4 mt-12" ]
-                    [ flakeResult
+                    [ Components.FlakeCard.view
                         { username = "domenkozar"
                         , repo = "elm2nix"
-                        , tag = "v2.2"
+                        , version = "v2.2"
                         , description = "Some flake description."
                         }
-                    , flakeResult
+                    , Components.FlakeCard.view
                         { username = "cachix"
                         , repo = "devenv"
-                        , tag = "v1.0"
+                        , version = "v1.0"
                         , description = "Some flake description."
                         }
                     ]
@@ -69,26 +70,3 @@ page =
         , Flakestry.Layout.viewFooter
         ]
     }
-
-
-type alias Flake =
-    { username : String
-    , repo : String
-    , tag : String
-    , description : String
-    }
-
-
-flakeResult : Flake -> Html msg
-flakeResult flake =
-    div [ class "mx-auto max-w-3xl text-lg block bg-white w-full h-28 px-8 py-6 rounded-md shadow-sm border border-slate-150" ]
-        [ div [ class "flex items-center" ]
-            [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline" |> Octicons.markGithub
-            , a [ href "/github", class "ml-2 hover:text-sky-500" ] [ span [ class "font-semibold" ] [ text flake.username ] ]
-            , span [ class "mx-2" ] [ text "/" ]
-            , a [ href "/github", class "hover:text-sky-500" ] [ span [ class "font-semibold" ] [ text flake.repo ] ]
-            , span [ class "ml-3 mr-1" ] [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline" |> Octicons.tag ]
-            , a [ href "/github", class "hover:text-sky-500" ] [ span [ class "font-semibold" ] [ text flake.tag ] ]
-            ]
-        , p [ class "mt-2" ] [ text flake.description ]
-        ]
