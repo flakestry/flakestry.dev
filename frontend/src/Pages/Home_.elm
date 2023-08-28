@@ -21,7 +21,7 @@ page =
             [ div
                 [ class "container py-24 max-w-3xl" ]
                 [ h1
-                    [ class "text-4xl text-center font-semibold"
+                    [ class "text-4xl md:text-center font-semibold"
                     ]
                     [ text "Find, Install, and Publish ", a [ href "https://nix.dev/concepts/flakes/", class "text-blue-900 hover:text-sky-500" ] [ text "Nix Flakes" ], text "." ]
                 , label [ class "max-w-3xl mx-auto relative block mt-8" ]
@@ -47,11 +47,12 @@ page =
                         ]
                         []
                     ]
-                , h2 [ class "max-w-3xl flex items-center text-xl text-slate-900 font-semibold mt-36" ]
+                , hr [ class "mt-36 border-t border-slate-200" ] []
+                , h2 [ class "max-w-3xl flex items-center pt-12 text-xl text-slate-900 font-semibold" ]
                     [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline h-5 w-5" |> Octicons.clock
                     , span [ class "ml-2" ] [ text "Recently released flakes" ]
                     ]
-                , div [ class "mt-8" ]
+                , div [ class "mt-12" ]
                     [ flakeResult
                         { username = "domenkozar"
                         , repo = "elm2nix"

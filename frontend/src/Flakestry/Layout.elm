@@ -49,12 +49,13 @@ viewNav =
 viewFooter : Html msg
 viewFooter =
     footer
-        [ class "text-sm pb-16 leading-6"
+        [ class "text-sm pb-16 mt-16 leading-6"
         ]
         [ div
             [ class "container max-w-5xl"
             ]
-            [ div [ class "flex border-t border-slate-300 pt-8" ]
+            [ hr [ class "flex border-t border-slate-200" ] []
+            , div [ class "flex pt-12" ]
                 [ div [ class "flex-none w-1/2 space-y-10 sm:space-y-8" ]
                     [ h2 [ class "font-medium" ] [ text "Getting Started" ]
                     , ul [ class "mt-3 space-y-2" ]
