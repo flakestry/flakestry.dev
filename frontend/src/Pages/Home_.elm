@@ -52,7 +52,7 @@ page =
                     [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline h-5 w-5" |> Octicons.clock
                     , span [ class "ml-2" ] [ text "Recently released flakes" ]
                     ]
-                , div [ class "mt-12" ]
+                , div [ class "flex flex-col space-y-4 mt-12" ]
                     [ flakeResult
                         { username = "domenkozar"
                         , repo = "elm2nix"
@@ -83,7 +83,7 @@ type alias Flake =
 
 flakeResult : Flake -> Html msg
 flakeResult flake =
-    div [ class "mx-auto max-w-3xl text-lg block bg-white w-full h-32 rounded-md shadow-sm border border-slate-150 p-8 mb-4" ]
+    div [ class "mx-auto max-w-3xl text-lg block bg-white w-full max-h-32 px-8 py-6 rounded-md shadow-sm border border-slate-150" ]
         [ div [ class "flex items-center" ]
             [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline" |> Octicons.markGithub
             , a [ href "/github", class "ml-2 hover:text-sky-500" ] [ span [ class "font-semibold" ] [ text flake.username ] ]
