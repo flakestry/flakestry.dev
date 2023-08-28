@@ -36,7 +36,7 @@ viewNav =
                         ]
                     , div [ class "flex items-center space-x-2" ]
                         [ a [ class "bg-blue-900 text-white text-sm font-medium pl-2 pr-3 py-2 cursor-pointer shadow-sm rounded hover:bg-blue-600 inline-flex items-center", href "/publish" ]
-                            [ Octicons.defaultOptions |> Octicons.class "text-white m-2" |> Octicons.color "white" |> Octicons.markGithub
+                            [ Octicons.defaultOptions |> Octicons.class "text-white mr-2" |> Octicons.color "white" |> Octicons.markGithub
                             , span [] [ text "Publish" ]
                             ]
                         ]
