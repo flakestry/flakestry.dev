@@ -83,7 +83,7 @@ type alias Flake =
 
 flakeResult : Flake -> Html msg
 flakeResult flake =
-    div [ class "mx-auto max-w-3xl text-lg block bg-white w-full max-h-32 px-8 py-6 rounded-md shadow-sm border border-slate-150" ]
+    div [ class "mx-auto max-w-3xl text-lg block bg-white w-full h-28 px-8 py-6 rounded-md shadow-sm border border-slate-150" ]
         [ div [ class "flex items-center" ]
             [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline" |> Octicons.markGithub
             , a [ href "/github", class "ml-2 hover:text-sky-500" ] [ span [ class "font-semibold" ] [ text flake.username ] ]
@@ -92,5 +92,5 @@ flakeResult flake =
             , span [ class "ml-3 mr-1" ] [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline" |> Octicons.tag ]
             , a [ href "/github", class "hover:text-sky-500" ] [ span [ class "font-semibold" ] [ text flake.tag ] ]
             ]
-        , p [ class "mt-4" ] [ text flake.description ]
+        , p [ class "mt-2" ] [ text flake.description ]
         ]
