@@ -53,14 +53,14 @@ page =
                     ]
                 , div [ class "flex flex-col space-y-4 mt-12" ]
                     [ Components.FlakeCard.view
-                        { username = "domenkozar"
-                        , repo = "elm2nix"
+                        { username = "nix-community"
+                        , repo = "home-manager"
                         , version = "v2.2"
                         , description = "Some flake description."
                         }
                     , Components.FlakeCard.view
-                        { username = "cachix"
-                        , repo = "devenv"
+                        { username = "nix-community"
+                        , repo = "disko"
                         , version = "v1.0"
                         , description = "Some flake description."
                         }
