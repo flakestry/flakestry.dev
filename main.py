@@ -1,8 +1,22 @@
 from fastapi import FastAPI
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from distutils.version import StrictVersion
 
 app = FastAPI()
 
+
+# GitHub Org
+#- slug
+
+# GitHub Repo
+#- name
+#- description
+
+# Release
+#- version
+#- created_on
+#- revision
+#- readme
 
 OIDC_config = {
     "client_id": "",
@@ -31,7 +45,11 @@ def read_org(org: str):
 
 @app.get("/flake/{org}/{repo}")
 def read_repo(org: str, repo: str):
-    return {}
+    
+    versions = ["1.1.2", "1.0.0", "1.3.3", "1.0.12", "1.0.2"]
+    versions.sort(key=StrictVersion)
+    
+    return { versions: versions }
 
 @app.get("/publish")
 def read_item(version: str):
