@@ -18,7 +18,8 @@
 
   languages.elm.enable = true;
 
-  services.opensearch.enable = true;
+  # 15:07:07 opensearch.1 | java.lang.RuntimeException: can not run opensearch as root
+  #services.opensearch.enable = true;
   services.postgres.enable = !config.container.isBuilding;
   services.caddy.enable = true;
   services.caddy.virtualHosts."http://localhost:8888" = {
@@ -40,11 +41,11 @@
   enterShell = ''
     export PATH="${config.devenv.root}/node_modules/.bin:$PATH"
   '' + lib.optionalString config.container.isBuilding ''
-    cd frontend && elm-land build
+    cd ${config.devenv.root}frontend && elm-land build
   '';
 
   processes.backend.exec = "uvicorn main:app --reload";
-  processes.frontend.exec = "cd frontend && elm-land server";
+  processes.frontend.exec = "cd ${config.devenv.root}/frontend && elm-land server";
 
   containers.processes.name = "flakestry";
   containers.processes.version = "staging";

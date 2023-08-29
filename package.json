@@ -1,4 +1,5 @@
 {
+  "name": "flakestry",
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.3",
     "@tailwindcss/typography": "^0.5.8",
