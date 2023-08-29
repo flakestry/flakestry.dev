@@ -8,33 +8,29 @@ import Octicons
 viewNav : Html msg
 viewNav =
     nav
-        [ class "py-4"
+        [ class "container max-w-5xl px-4 py-4"
         ]
         [ div
-            [ class "container max-w-5xl"
+            [ class "flex justify-between items-center"
             ]
-            [ div
-                [ class "flex justify-between items-center"
+            [ a [ href "/", class "flex space-x-2 text-xl font-bold tracking-tight" ]
+                [ img [ src "/logo.png", class "w-7" ] []
+                , span [] [ text "Flakestry" ]
                 ]
-                [ a [ href "/", class "flex space-x-2 text-xl font-bold tracking-tight" ]
-                    [ img [ src "/logo.png", class "w-7" ] []
-                    , span [] [ text "Flakestry" ]
+            , div [ class "flex" ]
+                [ ul
+                    [ class "flex items-center space-x-8 mr-5 text-sm leading-6 font-medium text-slate-800"
                     ]
-                , div [ class "flex" ]
-                    [ ul
-                        [ class "flex items-center space-x-8 mr-5 text-sm leading-6 font-medium text-slate-800"
+                    [ li [ class "hover:text-sky-500" ]
+                        [ a
+                            [ href "/about", class "px-4 py-2" ]
+                            [ text "About" ]
                         ]
-                        [ li [ class "hover:text-sky-500" ]
-                            [ a
-                                [ href "/about", class "px-4 py-2" ]
-                                [ text "About" ]
-                            ]
-                        ]
-                    , div [ class "flex items-center space-x-2" ]
-                        [ a [ class "bg-blue-900 text-white text-sm font-medium pl-2 pr-3 py-2 cursor-pointer shadow-sm rounded hover:bg-blue-600 inline-flex items-center", href "/publish" ]
-                            [ Octicons.defaultOptions |> Octicons.class "text-white mr-2" |> Octicons.color "white" |> Octicons.markGithub
-                            , span [] [ text "Publish" ]
-                            ]
+                    ]
+                , div [ class "flex items-center space-x-2" ]
+                    [ a [ class "bg-blue-900 text-white text-sm font-medium pl-2 pr-3 py-2 cursor-pointer shadow-sm rounded hover:bg-blue-600 inline-flex items-center", href "/publish" ]
+                        [ Octicons.defaultOptions |> Octicons.class "text-white mr-2" |> Octicons.color "white" |> Octicons.markGithub
+                        , span [] [ text "Publish" ]
                         ]
                     ]
                 ]
@@ -48,7 +44,7 @@ viewFooter =
         [ class "text-sm pb-16 mt-16 leading-6"
         ]
         [ div
-            [ class "container max-w-5xl"
+            [ class "container max-w-5xl px-4"
             ]
             [ hr [ class "flex border-t border-slate-200" ] []
             , div [ class "flex pt-12" ]
