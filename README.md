@@ -33,7 +33,7 @@ Built using [elm.land](https://elm.land/) and [FastAPI](https://fastapi.tiangolo
 - [ ] /publish
 - [ ] /flake/github/{owner}
 - [ ] /flake/github/{owner}/{repo}
-- [ ] /search (opensearch)
+- [ ] /flake?q= (opensearch)
 
 ## Roadmap
 

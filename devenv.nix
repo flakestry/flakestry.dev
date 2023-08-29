@@ -47,6 +47,7 @@
   processes.frontend.exec = "cd frontend && elm-land server";
 
   containers.processes.name = "flakestry";
+  containers.processes.version = "staging";
   containers.processes.registry = "docker://registry.fly.io/";
   containers.processes.defaultCopyArgs = [
     "--dest-creds"
