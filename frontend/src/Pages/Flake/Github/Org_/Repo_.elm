@@ -1,11 +1,10 @@
 module Pages.Flake.Github.Org_.Repo_ exposing (Model, Msg, page)
 
+import Components.File as File
 import Effect exposing (Effect)
 import Flakestry.Layout
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Markdown
-import Octicons
 import Page exposing (Page)
 import Route exposing (Route)
 import Shared
@@ -81,16 +80,17 @@ view model =
     , body =
         [ Flakestry.Layout.viewNav
         , div [ class "container max-w-5xl px-4" ]
-            [ h2 [ class "flex items-center font-semibold text-2xl leading-6 mt-6" ]
-                [ img [ class "inline h-7 w-7 rounded border border-slate-300", src ("https://github.com/" ++ model.org ++ ".png?size=128") ] []
-                , span [ class "ml-2" ] [ text <| model.org ++ " / " ++ model.repo ]
+            [ div [ class "pt-24 pb-16" ]
+                [ h2 [ class "flex items-center font-semibold text-2xl leading-6" ]
+                    [ img [ class "inline h-7 w-7 rounded border border-slate-300", src ("https://github.com/" ++ model.org ++ ".png?size=128") ] []
+                    , span [ class "ml-2" ] [ text <| model.org ++ " / " ++ model.repo ]
+                    ]
+                , p [ class "mt-3 text-lg leading-6" ] [ text "Some detailed description of the repo" ]
                 ]
-            , p [ class "mt-3 text-lg leading-6" ] [ text "Some detailed description of the repo" ]
-            , h3 [ class "font-semibold flex items-center mt-24 py-4" ]
-                [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline h-5 w-5" |> Octicons.book
-                , span [ class "ml-2" ] [ text "README" ]
-                ]
-            , pre [] [ Markdown.toHtml [ class "content whitespace-pre-wrap rounded-md px-8 py-12 shadow-sm border border-slate-300" ] model.renderedReadme ]
+            , File.defaultOptions
+                |> File.fileName "README"
+                |> File.contents model.renderedReadme
+                |> File.view
             ]
         , Flakestry.Layout.viewFooter
         ]

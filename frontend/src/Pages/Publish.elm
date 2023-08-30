@@ -1,10 +1,9 @@
 module Pages.Publish exposing (page)
 
+import Components.File as File
 import Flakestry.Layout
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Markdown
-import Octicons
 import View exposing (View)
 
 
@@ -20,26 +19,10 @@ page =
                     [ class "py-24 text-4xl font-semibold md:text-center"
                     ]
                     [ text "Publish your Flake for each tag" ]
-                , div
-                    [ class "border border-slate-300 rounded-md shadow-sm overflow-hidden" ]
-                    [ div [ class "flex justify-between px-4 py-2 border-b border-slate-300 bg-slate-100" ]
-                        [ h3
-                            [ class "inline-flex items-center text-slate-900"
-                            ]
-                            [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.size 16 |> Octicons.class "inline" |> Octicons.file
-                            , span [ class "ml-2" ] [ text ".github/workflows/publish.yaml" ]
-                            ]
-                        , button
-                            [ class "inline-flex items-center text-sm text-white font-medium pl-2 pr-3 py-2 shadow-sm rounded bg-blue-900 hover:bg-blue-600"
-                            ]
-                            [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.size 15 |> Octicons.class "inline" |> Octicons.clippy
-                            , span [ class "ml-2" ] [ text "Copy" ]
-                            ]
-                        ]
-                    , pre []
-                        [ Markdown.toHtml [ class "px-4 py-4 content overflow-x-scroll" ] publishFlakeTemplate
-                        ]
-                    ]
+                , File.defaultOptions
+                    |> File.fileName ".github/workflows/publish.yaml"
+                    |> File.contents publishFlakeTemplate
+                    |> File.view
                 ]
             ]
         , Flakestry.Layout.viewFooter
