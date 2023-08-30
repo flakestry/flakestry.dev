@@ -80,10 +80,16 @@ view model =
     , body =
         [ Flakestry.Layout.viewNav
         , div [ class "container max-w-5xl px-4" ]
-            [ div [ class "pt-24 pb-16" ]
-                [ h2 [ class "flex items-center font-semibold text-2xl leading-6" ]
+            [ div [ class "py-16" ]
+                [ h2 [ class "inline-flex items-center font-semibold text-2xl leading-6" ]
                     [ img [ class "inline h-7 w-7 rounded border border-slate-300", src ("https://github.com/" ++ model.org ++ ".png?size=128") ] []
-                    , span [ class "ml-2" ] [ text <| model.org ++ " / " ++ model.repo ]
+                    , a
+                        [ class "ml-2 hover:text-sky-500"
+                        , href ("https://github.com/" ++ model.org)
+                        ]
+                        [ text model.org ]
+                    , span [ class "mx-2" ] [ text "/" ]
+                    , span [] [ text model.repo ]
                     ]
                 , p [ class "mt-3 text-lg leading-6" ] [ text "Some detailed description of the repo" ]
                 ]
