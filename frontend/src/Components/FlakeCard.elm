@@ -17,7 +17,7 @@ type alias FlakeCard =
 
 view : FlakeCard -> Html msg
 view card =
-    div [ class "mx-auto max-w-3xl text-lg block bg-white w-full h-28 px-8 py-6 rounded-md shadow-sm border border-slate-150" ]
+    div [ class "mx-auto text-lg block bg-white w-full h-28 px-8 py-6 rounded-md shadow-sm border border-slate-150" ]
         [ div [ class "flex items-center" ]
             [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline" |> Octicons.markGithub
             , a [ Route.Path.href (Route.Path.Flake_Github_Org_ { org = card.username }), class "ml-2 hover:text-sky-500" ] [ span [ class "font-semibold" ] [ text card.username ] ]

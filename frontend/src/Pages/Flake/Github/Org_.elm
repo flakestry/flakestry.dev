@@ -70,19 +70,21 @@ subscriptions model =
 
 view : String -> Model -> View Msg
 view org model =
-    { title = "Pages.Flake.Github.Org_"
+    { title = org
     , body =
         [ Flakestry.Layout.viewNav
-        , h2 [ class "font-semibold text-2xl mx-auto w-full h-28 px-8 py-6" ]
-            [ img [ class "inline mx-2", src ("https://github.com/" ++ org ++ ".png?size=24") ] []
-            , text "xxx"
+        , div [ class "container max-w-5xl px-4" ]
+            [ h2 [ class "inline-flex items-center font-semibold text-2xl py-16" ]
+                [ img [ class "inline h-7 w-7 rounded border border-slate-300", src ("https://github.com/" ++ org ++ ".png?size=128") ] []
+                , span [ class "ml-2" ] [ text org ]
+                ]
+            , Components.FlakeCard.view
+                { username = "cachix"
+                , repo = "devenv"
+                , version = "v1.0"
+                , description = "Some flake description."
+                }
             ]
-        , Components.FlakeCard.view
-            { username = "cachix"
-            , repo = "devenv"
-            , version = "v1.0"
-            , description = "Some flake description."
-            }
         , Flakestry.Layout.viewFooter
         ]
     }
