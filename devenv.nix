@@ -22,7 +22,7 @@
   #services.opensearch.enable = true;
   services.postgres.enable = !config.container.isBuilding;
   services.caddy.enable = true;
-  services.caddy.virtualHosts."http://localhost:8888" = {
+  services.caddy.virtualHosts.":8888" = {
     extraConfig = ''
       root * ${config.devenv.root}/frontend/dist
 
@@ -44,7 +44,7 @@
     cd ${config.devenv.root}frontend && elm-land build
   '';
 
-  processes.backend.exec = "uvicorn main:app --reload";
+  processes.backend.exec = "uvicorn main:app --reload --root-path /api";
   processes.frontend.exec = "cd ${config.devenv.root}/frontend && elm-land server";
 
   containers.processes.name = "flakestry";
