@@ -18,7 +18,7 @@ page =
         , {- Content -}
           main_ []
             [ div
-                [ class "container py-24 max-w-3xl" ]
+                [ class "container px-4 py-24 max-w-3xl" ]
                 [ h1
                     [ class "text-4xl md:text-center font-semibold"
                     ]
