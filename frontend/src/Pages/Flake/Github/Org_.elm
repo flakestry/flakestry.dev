@@ -36,18 +36,18 @@ type alias Model =
 
 init : Route { org : String } -> () -> ( Model, Effect Msg )
 init route () =
-    let
-        toBaseName url =
-            Url.toString { url | path = "", query = Nothing, fragment = Nothing }
-
-        host =
-            toBaseName route.url
-    in
+    -- let
+    --     toBaseName url =
+    --         Url.toString { url | path = "", query = Nothing, fragment = Nothing }
+    --
+    --     host =
+    --         toBaseName route.url
+    -- in
     ( {}
     , Effect.sendCmd <|
         Api.send (\_ -> ExampleMsgReplaceMe)
             (Api.Request.Default.getOrgFlakeOrgGet "cachix"
-                |> Api.withBasePath host
+             -- |> Api.withBasePath host
             )
     )
 
