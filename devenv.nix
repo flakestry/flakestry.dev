@@ -44,10 +44,13 @@
     cd ${config.devenv.root}frontend && elm-land build
   '';
 
-  processes.backend.exec = "uvicorn main:app --reload --root-path /api";
-  processes.frontend.exec = "cd ${config.devenv.root}/frontend && elm-land server";
+  processes = {
+    backend.exec = "uvicorn main:app --reload --root-path /api";
+  } // lib.optionalAttrs (!config.container.isBuilding) {
+    frontend.exec = "cd ${config.devenv.root}/frontend && elm-land server";
+  };
 
-  containers.processes.name = "flakestry";
+  containers.processes.name = "flakestry-staging";
   containers.processes.version = "staging";
   containers.processes.registry = "docker://registry.fly.io/";
   containers.processes.defaultCopyArgs = [
