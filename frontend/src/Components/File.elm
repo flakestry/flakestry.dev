@@ -47,16 +47,16 @@ view : Options -> Html msg
 view options =
     div
         [ HA.class <| "border border-slate-300 rounded-md shadow-sm overflow-hidden" ++ options.class_ ]
-        [ div [ HA.class "flex justify-between px-4 py-2 border-b border-slate-300 bg-slate-100" ] <|
+        [ div [ HA.class "flex items-center justify-between px-4 py-2 border-b border-slate-300 bg-slate-100" ] <|
             h3
                 [ HA.class "inline-flex items-center text-slate-800 font-medium py-2"
                 ]
-                [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.size 16 |> Octicons.class "inline" |> Octicons.file
+                [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.size 16 |> Octicons.class "inline shrink-0" |> Octicons.file
                 , span [ HA.class "ml-2" ] [ text options.fileName ]
                 ]
                 :: (if options.enableCopyButton then
                         [ button
-                            [ HA.class "inline-flex items-center text-sm text-white font-medium pl-2 pr-3 py-2 shadow-sm rounded bg-blue-900 hover:bg-blue-600"
+                            [ HA.class "ml-2 inline-flex items-center text-sm text-white font-medium pl-2 pr-3 py-2 shadow-sm rounded bg-blue-900 hover:bg-blue-600"
                             , HA.type_ "button"
                             ]
                             [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.size 15 |> Octicons.class "inline" |> Octicons.clippy
