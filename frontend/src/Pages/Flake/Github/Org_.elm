@@ -1,5 +1,7 @@
 module Pages.Flake.Github.Org_ exposing (Model, Msg, page)
 
+import Api
+import Api.Request.Default
 import Components.FlakeCard
 import Effect exposing (Effect)
 import Flakestry.Layout
@@ -10,13 +12,14 @@ import Page exposing (Page)
 import Route exposing (Route)
 import Route.Path
 import Shared
+import Url
 import View exposing (View)
 
 
 page : Shared.Model -> Route { org : String } -> Page Model Msg
 page shared route =
     Page.new
-        { init = init
+        { init = init route
         , update = update
         , subscriptions = subscriptions
         , view = view route.params.org
@@ -31,10 +34,21 @@ type alias Model =
     {}
 
 
-init : () -> ( Model, Effect Msg )
-init () =
+init : Route { org : String } -> () -> ( Model, Effect Msg )
+init route () =
+    let
+        toBaseName url =
+            Url.toString { url | path = "", query = Nothing, fragment = Nothing }
+
+        host =
+            toBaseName route.url
+    in
     ( {}
-    , Effect.none
+    , Effect.sendCmd <|
+        Api.send (\_ -> ExampleMsgReplaceMe)
+            (Api.Request.Default.getOrgFlakeOrgGet "cachix"
+                |> Api.withBasePath host
+            )
     )
 
 
