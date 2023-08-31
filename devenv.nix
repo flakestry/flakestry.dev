@@ -72,6 +72,8 @@
       --input-spec http://localhost:8000/openapi.json \
       --generator-name elm \
       --output ${config.devenv.root}/frontend/generated-api
+    sed -i "s/Url.Builder.crossOrigin req.basePath req.pathParams/Url.Builder.absolute (\"api\" :: req.pathParams)/g" \
+      ${config.devenv.root}/frontend/generated-api/src/Api.elm
   '';
 
   processes.backend.exec = "uvicorn main:app --reload --root-path /api";
