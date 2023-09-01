@@ -8,19 +8,6 @@ from distutils.version import StrictVersion
 app = FastAPI()
 FastAPIInstrumentor.instrument_app(app)
 
-# GitHub Org
-#- slug
-
-# GitHub Repo
-#- name
-#- description
-
-# Release
-#- version
-#- created_on
-#- revision
-#- readme
-
 OIDCConfig = {
     "client_id": "6779ef20e75817b79602",
     # Audience can be omitted in which case the aud value defaults to client_id
