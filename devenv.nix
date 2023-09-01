@@ -1,28 +1,7 @@
 { config, pkgs, lib, ... }: {
   packages =
-    let
-      # swagger-codegen = pkgs.swagger-codegen3.overrideAttrs (prev: rec {
-      #   version = "v3.0.46";
-      #   src = pkgs.fetchFromGitHub {
-      #     owner = "swagger-api";
-      #     repo = "swagger-codegen";
-      #     rev = version;
-      #     hash = "sha256-3uhUAPQtlAacxizUCrHyu6LJyjhKpa274LEMcgzz/8M=";
-      #   };
-      # });
-      # openapi-generator-cli = pkgs.openapi-generator-cli.overrideAttrs (prev: rec {
-      #   version = "v7.0.0";
-      #   src = pkgs.fetchFromGitHub {
-      #     owner = "OpenAPITools";
-      #     repo = "openapi-generator";
-      #     rev = version;
-      #     hash = "sha256-6gLWZhP0IZC6p5703RVZlMOM3b3qQrN6g0nC9K2wPvA=";
-      #   };
-      # });
-    in
     [
       pkgs.flyctl
-      # swagger-codegen
       pkgs.openapi-generator-cli
     ];
 
@@ -67,16 +46,24 @@
     cd ${config.devenv.root}frontend && elm-land build
   '';
 
+  # Generate the Elm API client
+  #
+  # We replace the genererated cross-origin requests with requests to the same host.
+  # An alternative would be to specify the server URL when created the FastAPI app.
+  # You can also set the `--server-variables` option to fill in template variables in the server URL.
   scripts.generate-elm-api.exec = ''
     openapi-generator-cli generate \
       --input-spec http://localhost:8000/openapi.json \
       --generator-name elm \
       --output ${config.devenv.root}/frontend/generated-api
-    sed -i "s/Url.Builder.crossOrigin req.basePath req.pathParams/Url.Builder.absolute (\"api\" :: req.pathParams)/g" \
+
+    root_path=$(jq '.servers[0].url')
+
+    sed -i "s/Url.Builder.crossOrigin req.basePath req.pathParams/Url.Builder.absolute (\"$root_path\" :: req.pathParams)/g" \
       ${config.devenv.root}/frontend/generated-api/src/Api.elm
   '';
 
-  processes.backend.exec = "uvicorn main:app --reload --root-path /api";
+  processes.backend.exec = "uvicorn main:app --reload";
   processes.frontend.exec = "cd ${config.devenv.root}/frontend && elm-land server";
 
   containers.processes.name = "flakestry";

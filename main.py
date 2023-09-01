@@ -7,17 +7,10 @@ from fastapi.responses import PlainTextResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 app = FastAPI(
-    # servers=[
-    #     { "url": "http://192.168.64.2:8888/api" },
-    # ],
+    # The subpath for our API.
+    # Allows the API docs to find the correct path to the OpenAPI spec.
     root_path="/api",
-    # The elm codegen only generates cross origin queries, so it needs to know
-    # the base path. Since it can't tell the host, it uses localhost by
-    # default. You either hardcode the url via "servers" above, or override
-    # each query with withBasePath.
-    # root_path_in_servers=False
 )
-
 
 # GitHub Org
 #- slug
@@ -106,10 +99,10 @@ def flakestry_openapi():
         return app.openapi_schema
 
     openapi_schema = get_openapi(
-        title="Custom title",
-        version="2.5.0",
-        description="Here's a longer description of the custom **OpenAPI** schema",
-        openapi_version = "3.0.0",
+        title="Flakestry.dev",
+        version="0.0.1",
+        # OpenAPI 3.1 is not supported by openapi-generator
+        openapi_version="3.0.0",
         routes=app.routes,
         servers=app.servers,
     )
