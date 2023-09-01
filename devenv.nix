@@ -1,6 +1,7 @@
 { config, pkgs, lib, ... }: {
   packages = [
     pkgs.flyctl
+    pkgs.openapi-generator-cli
   ];
 
   env.LD_LIBRARY_PATH = "";
@@ -44,8 +45,27 @@
     cd ${config.devenv.root}frontend && elm-land build
   '';
 
+  # Generate the Elm API client
+  #
+  # We replace the genererated cross-origin requests with requests to the same host.
+  # An alternative would be to specify the server URL when created the FastAPI app.
+  # You can also set the `--server-variables` option to fill in template variables in the server URL.
+  scripts.generate-elm-api.exec = ''
+    openapi_url="http://localhost:8000/openapi.json"
+
+    openapi-generator-cli generate \
+      --input-spec $openapi_url \
+      --generator-name elm \
+      --output ${config.devenv.root}/frontend/generated-api
+
+    root_path=$(curl $openapi_url | jq '.servers[0].url')
+
+    sed -i "s#Url.Builder.crossOrigin req.basePath req.pathParams#Url.Builder.absolute ($root_path :: req.pathParams)#g" \
+      ${config.devenv.root}/frontend/generated-api/src/Api.elm
+  '';
+
   processes = {
-    backend.exec = "cd ${config.devenv.root} && uvicorn main:app --reload --root-path /api";
+    backend.exec = "cd ${config.devenv.root} && uvicorn main:app --reload";
   } // lib.optionalAttrs (!config.container.isBuilding) {
     frontend.exec = "cd ${config.devenv.root}/frontend && elm-land server";
   };
