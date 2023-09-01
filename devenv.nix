@@ -45,7 +45,7 @@
   '';
 
   processes = {
-    backend.exec = "uvicorn main:app --reload --root-path /api";
+    backend.exec = "cd ${config.devenv.root} && uvicorn main:app --reload --root-path /api";
   } // lib.optionalAttrs (!config.container.isBuilding) {
     frontend.exec = "cd ${config.devenv.root}/frontend && elm-land server";
   };
