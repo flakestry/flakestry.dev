@@ -2,4 +2,5 @@ fastapi
 fastapi_oidc
 opentelemetry-instrumentation-fastapi
 uvicorn
-sqlalchemy
+sqlmodel
+pg8000

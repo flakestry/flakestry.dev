@@ -1,9 +1,12 @@
 from typing import Callable
 from fastapi import FastAPI, Depends
+from pydantic import BaseModel
 from fastapi_oidc import IDToken
 from fastapi_oidc import get_auth
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from distutils.version import StrictVersion
+
+from sql import create_db_and_tables
 
 app = FastAPI()
 FastAPIInstrumentor.instrument_app(app)
@@ -18,6 +21,13 @@ OIDCConfig = {
 }
 
 authenticate_user: Callable = get_auth(**OIDCConfig)
+
+
+
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
+
 
 @app.get("/flake")
 def get_flakes():
@@ -41,7 +51,15 @@ def read_repo(org: str, repo: str):
     
     return { versions: versions, latest: latest}
 
+
+class Publish(BaseModel):
+    metadata: str
+    metadata_errors: str
+    readme: str
+    outputs: str
+    outputs_errors: str
+
 @app.post("/publish")
-def read_item(id_token: IDToken = Depends(authenticate_user)):
+def publish(publish: Publish, id_token: IDToken = Depends(authenticate_user)):
     print(id_token)
     return {}
