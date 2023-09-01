@@ -42,7 +42,7 @@ on:
     workflow_dispatch:
         inputs:
             tag:
-                description: "The existing tag to publish to FlakeHub"
+                description: "The existing tag to publish"
                 type: "string"
                 required: true
 jobs:
@@ -52,7 +52,6 @@ jobs:
             id-token: "write"
             contents: "read"
         steps:
-        - uses: actions/checkout@v3
         - uses: flakestry/flakestry-publish@main
             with:
                 version: "${{ inputs.tag }}"
