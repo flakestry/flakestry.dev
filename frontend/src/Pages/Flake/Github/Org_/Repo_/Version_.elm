@@ -124,7 +124,6 @@ view model =
             , File.defaultOptions
                 |> File.fileName "README"
                 |> File.contents model.renderedReadme
-                |> File.enableCopyButton False
                 |> File.view
             ]
         , Flakestry.Layout.viewFooter
