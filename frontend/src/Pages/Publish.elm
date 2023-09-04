@@ -52,8 +52,8 @@ jobs:
             id-token: "write"
             contents: "read"
         steps:
-        - uses: flakestry/flakestry-publish@main
-            with:
-                version: "${{ inputs.tag }}"
+            - uses: flakestry/flakestry-publish@main
+                with:
+                    version: "${{ inputs.tag }}"
 ```
     """
