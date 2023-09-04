@@ -1,6 +1,7 @@
 { config, pkgs, lib, ... }: {
   packages = [
     pkgs.flyctl
+    pkgs.cloudflared
   ];
 
   env.LD_LIBRARY_PATH = "";

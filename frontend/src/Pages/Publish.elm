@@ -53,7 +53,7 @@ jobs:
             contents: "read"
         steps:
             - uses: flakestry/flakestry-publish@main
-                with:
-                    version: "${{ inputs.tag }}"
+              with:
+                version: "${{ inputs.tag }}"
 ```
     """

@@ -3,4 +3,4 @@ fastapi_oidc
 opentelemetry-instrumentation-fastapi
 uvicorn
 sqlmodel
-pg8000
+psycopg2
