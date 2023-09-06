@@ -1,7 +1,7 @@
 from typing import Optional, List
 import os
 from datetime import datetime
-from sqlmodel import Field, Relationship, SQLModel, create_engine
+from sqlmodel import Session, Field, Relationship, SQLModel, create_engine
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -58,3 +58,7 @@ engine = create_engine(engine_url)
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
+
+def get_session():
+    with Session(engine) as session:
+        yield session

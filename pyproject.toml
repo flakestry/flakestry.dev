@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "flakestry"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.103.1"
+fastapi-oidc = "^0.0.9"
+opentelemetry-instrumentation-fastapi = "^0.40b0"
+uvicorn = "^0.23.2"
+sqlmodel = "^0.0.8"
+psycopg2 = "^2.9.7"
+requests = "^2.31.0"
+packaging = "^23.1"
+opensearch-py = "^2.3.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

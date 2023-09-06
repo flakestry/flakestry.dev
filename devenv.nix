@@ -9,8 +9,7 @@
 
   languages.python = {
     enable = true;
-    venv.enable = true;
-    venv.requirements = ./requirements.txt;
+    poetry.enable = true;
   };
 
   languages.javascript = {
@@ -51,7 +50,7 @@
   # An alternative would be to specify the server URL when created the FastAPI app.
   # You can also set the `--server-variables` option to fill in template variables in the server URL.
   scripts.generate-elm-api.exec = ''
-    python ${config.devenv.root}/api/gen_openapi.py
+    python ${config.devenv.root}/backend/gen_openapi.py
 
     echo generating frontend/generated-api
     openapi-generator-cli generate \
@@ -66,7 +65,7 @@
   '';
 
   processes = {
-    backend.exec = "cd ${config.devenv.root} && uvicorn --app-dir api --reload main:app";
+    backend.exec = "cd ${config.devenv.root} && uvicorn --app-dir backend --reload flakestry.main:app";
   } // lib.optionalAttrs (!config.container.isBuilding) {
     frontend.exec = "cd ${config.devenv.root}/frontend && elm-land server";
   };
