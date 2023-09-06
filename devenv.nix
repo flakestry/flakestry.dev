@@ -47,16 +47,15 @@
 
   # Generate the Elm API client
   #
-  # The backend must already be running on localhost:8000
-  #
   # We replace the genererated cross-origin requests with requests to the same host.
   # An alternative would be to specify the server URL when created the FastAPI app.
   # You can also set the `--server-variables` option to fill in template variables in the server URL.
   scripts.generate-elm-api.exec = ''
-    openapi_url="http://localhost:8000/openapi.json"
+    python ${config.devenv.root}/gen_openapi.py
 
+    echo generating frontend/generated-api
     openapi-generator-cli generate \
-      --input-spec $openapi_url \
+      --input-spec ${config.devenv.root}/frontend/openapi.json \
       --generator-name elm \
       --output ${config.devenv.root}/frontend/generated-api
 
