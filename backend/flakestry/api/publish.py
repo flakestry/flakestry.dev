@@ -1,5 +1,5 @@
 from typing import Any
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Depends, Header, status
 from fastapi_oidc import IDToken
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -15,23 +15,26 @@ from flakestry.sql import GitHubOwner, GitHubRepo, Release, get_session
 
 class Publish(BaseModel):
     version: str
-    metadata: Any | None
+    metadata: dict[str,Any] | None
     metadata_errors: str | None
     readme: str | None
-    outputs: Any | None
+    outputs: dict[str,Any] | None
     outputs_errors: str | None
 
 router = APIRouter()
 
 @router.post("/publish",
-          responses={
-            422: {"model": ValidationError},
-         })
+    status_code=status.HTTP_201_CREATED,
+    response_model=None,
+    responses={
+        422: {"model": ValidationError},
+    }
+)
 def publish(publish: Publish,
             token: IDToken = Depends(authenticate_user),
             github_token: str = Header(),
             opensearch: OpenSearch = Depends(get_opensearch),
-            session: Session = Depends(get_session)) -> None:
+            session: Session = Depends(get_session)):
 
     #if id_token.repository_visibility == "private":
         #return JSONResponse(status_code=400, 
@@ -42,7 +45,7 @@ def publish(publish: Publish,
     version = re.search(version_regex, publish.version)
     if not version:
         return JSONResponse(
-            status_code=400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             content={
                 "message": f"{publish.version} doesn't match regex {version_regex}"
             })
@@ -73,7 +76,7 @@ def publish(publish: Publish,
     if session.exec(select(Release).where(Release.version == version)\
                     .where(Release.repo_id == repo.id)).first():
         return JSONResponse(
-            status_code=400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             content={
                 "message": f"Version {publish.version} already exists"
             })

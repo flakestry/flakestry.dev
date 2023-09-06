@@ -1,10 +1,9 @@
-from typing import Optional, List
+from typing import Optional, List, Any
 import os
 from datetime import datetime
 from sqlmodel import Session, Field, Relationship, SQLModel, create_engine
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB
-
 
 class GitHubOwner(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -34,18 +33,24 @@ class Release(SQLModel, table=True):
     repo: GitHubRepo = Relationship(
         back_populates="releases",
         sa_relationship_kwargs={"lazy": "joined"})
-    
+
     readme: Optional[str]
     version: str = Field(sa_column_kwargs={"unique": True})
     commit: str
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
     )
-    meta_data: Optional[dict] = Field(default_factory=dict, sa_column=Column(JSONB))
+    meta_data: Optional[dict[str, Any]] = Field(
+        default_factory=dict,
+        sa_column=Column(JSONB)
+    )
     meta_data_errors: Optional[str]
-    outputs: Optional[dict] = Field(default_factory=dict, sa_column=Column(JSONB))
+    outputs: Optional[dict[str,Any]] = Field(
+        default_factory=dict,
+        sa_column=Column(JSONB)
+    )
     outputs_errors: Optional[str]
-    
+
 
 host = os.environ.get('PGHOST', None)
 
