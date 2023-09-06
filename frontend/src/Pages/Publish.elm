@@ -38,7 +38,8 @@ name: "Publish a flake to flakestry"
 on:
     push:
         tags:
-        - "v?[0-9]+.[0-9]+.[0-9]+*"
+        - "v?[0-9]+.[0-9]+.[0-9]+"
+        - "v?[0-9]+.[0-9]+"
     workflow_dispatch:
         inputs:
             tag:
@@ -54,6 +55,6 @@ jobs:
         steps:
             - uses: flakestry/flakestry-publish@main
               with:
-                version: "${{ inputs.tag }}"
+                version: "${{ inputs.tag || github.ref_name }}"
 ```
     """

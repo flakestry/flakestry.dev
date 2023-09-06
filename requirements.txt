@@ -4,3 +4,5 @@ opentelemetry-instrumentation-fastapi
 uvicorn
 sqlmodel
 psycopg2
+requests
+packaging
