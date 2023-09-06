@@ -3,11 +3,14 @@ import re
 from datetime import datetime
 import os
 import requests
-from fastapi import FastAPI, Depends, Header
+from fastapi import FastAPI, Depends, Header, Request, Response, status
+from fastapi.openapi.utils import get_openapi
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from fastapi.exceptions import RequestValidationError
 from fastapi_oidc import IDToken
 from fastapi_oidc import get_auth
+from pydantic import BaseModel
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from packaging.version import parse
 from sqlmodel import Session, select
@@ -15,7 +18,54 @@ from opensearchpy import OpenSearch
 
 from sql import create_db_and_tables, GitHubOwner, GitHubRepo, Release, engine
 
-app = FastAPI()
+app = FastAPI(
+    # The subpath for our API.
+    # Allows the API docs to find the correct path to the OpenAPI spec.
+    root_path="/api",
+)
+
+# Override the schema to use OpenAPI 3.0.0.
+# OpenAPI 3.1 is not supported by openapi-generator.
+# https://fastapi.tiangolo.com/how-to/extending-openapi/
+def flakestry_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title="Flakestry.dev",
+        version="0.0.1",
+        openapi_version="3.0.0",
+        routes=app.routes,
+        servers=app.servers,
+    )
+
+    # Cache the schema
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+class ErrorDetail(BaseModel):
+    loc: list[str]
+    msg: str
+    type: str
+
+# Override the default ValidationError response to work with openapi-generator.
+# In particular, we cannot have an anyOf type for the location field.
+# TODO: Work on the error response
+class ValidationError(BaseModel):
+  detail: list[ErrorDetail]
+  body: str
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+    request: Request,
+    exc: RequestValidationError,
+) -> Response:
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=jsonable_encoder({"detail": exc.errors(), "body": exc.body}),
+    )
+
+app.openapi = flakestry_openapi
 FastAPIInstrumentor.instrument_app(app)
 
 
@@ -63,7 +113,10 @@ class FlakeRelease(BaseModel):
 class FlakesResponse(BaseModel):
     releases: List[FlakeRelease]
 
-@app.get("/flake")
+@app.get("/flake",
+         responses={
+            422: {"model": ValidationError},
+         })
 def get_flakes( session: Session = Depends(get_session)
               , q: Union[str, None] = None) -> FlakesResponse:
     if q:
@@ -89,7 +142,10 @@ def get_flakes( session: Session = Depends(get_session)
 class OwnerResponse(BaseModel):
     repos: List[GitHubRepo]
 
-@app.get("/flake/github/{owner}")
+@app.get("/flake/github/{owner}", 
+         responses={
+            422: {"model": ValidationError},
+         })
 def read_owner(owner: str, session: Session = Depends(get_session)) -> OwnerResponse:
     select(GitHubRepo).join(GitHubOwner).where(GitHubOwner.name == owner)
     repos = session.exec().all()
@@ -101,7 +157,10 @@ class RepoResponse(BaseModel):
     releases: List[Release]
     latest: Release | None
 
-@app.get("/flake/github/{owner}/{repo}")
+@app.get("/flake/github/{owner}/{repo}",
+         responses={
+            422: {"model": ValidationError},
+         })
 def read_repo( owner: str
              , repo: str
              , session: Session = Depends(get_session)) -> RepoResponse:
@@ -129,7 +188,10 @@ class Publish(BaseModel):
     outputs_errors: str | None
 
 
-@app.post("/publish")
+@app.post("/publish",
+          responses={
+            422: {"model": ValidationError},
+         })
 def publish(publish: Publish,
             token: IDToken = Depends(authenticate_user),
             github_token: str = Header(),

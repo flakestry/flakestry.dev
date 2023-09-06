@@ -1,11 +1,12 @@
-// Import assets
+import Clipboard from 'clipboard';
+
 import './index.css';
 
 // This is called BEFORE your Elm app starts up
 // 
 // The value returned here will be passed as flags 
 // into your `Shared.init` function.
-export const flags = ({ env }) => {    
+export const flags = ({ env }) => {
     return {}
 }
 
@@ -15,5 +16,5 @@ export const flags = ({ env }) => {
 // to your Elm application, or subscribe to incoming
 // messages from Elm
 export const onReady = ({ app, env }) => {
-
+    const clipboard = new Clipboard('.clipboard');
 }
