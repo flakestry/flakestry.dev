@@ -6,3 +6,4 @@ sqlmodel
 psycopg2
 requests
 packaging
+opensearch-py

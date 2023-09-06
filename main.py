@@ -1,8 +1,9 @@
-from typing import Callable, Any, List
+from typing import Callable, Any, List, Union
 import re
 from datetime import datetime
 import os
-from fastapi import FastAPI, Depends
+import requests
+from fastapi import FastAPI, Depends, Header
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from fastapi_oidc import IDToken
@@ -10,11 +11,21 @@ from fastapi_oidc import get_auth
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from packaging.version import parse
 from sqlmodel import Session, select
+from opensearchpy import OpenSearch
 
 from sql import create_db_and_tables, GitHubOwner, GitHubRepo, Release, engine
 
 app = FastAPI()
 FastAPIInstrumentor.instrument_app(app)
+
+
+opensearch = OpenSearch(
+    hosts = [{'host': 'localhost', 'port': 9200}],
+)
+
+opensearch_index = "flakes"
+if not opensearch.indices.exists(index=opensearch_index):
+    response = opensearch.indices.create(opensearch_index, body={})
 
 # TODO: use pydantic_settings: fails to compile pyyaml
 oidc_audience = os.environ['OIDC_AUDIENCE']
@@ -53,11 +64,26 @@ class FlakesResponse(BaseModel):
     releases: List[FlakeRelease]
 
 @app.get("/flake")
-def get_flakes(session: Session = Depends(get_session)) -> FlakesResponse:
-    # TODO: search when q=foobar
-
-    q = select(Release).order_by(Release.created_at.desc()).limit(10)
-    releases = session.exec(q).all()
+def get_flakes( session: Session = Depends(get_session)
+              , q: Union[str, None] = None) -> FlakesResponse:
+    if q:
+        response = opensearch.search(
+            body = {
+                'size': 10,
+                'query': {
+                    'multi_match': {
+                        'query': q,
+                        'fields': ['description^2', 'readme', 'outputs']
+                    }
+                }
+            },
+            index = opensearch_index
+        )
+        ids = [int(hit['_id']) for hit in response['hits']['hits']]
+        releases = session.exec(select(Release).where(Release.id.in_(ids))).all()
+    else:
+        q = select(Release).order_by(Release.created_at.desc()).limit(10)
+        releases = session.exec(q).all()
     return {"releases": releases}
 
 class OwnerResponse(BaseModel):
@@ -96,7 +122,6 @@ def read_repo( owner: str
 
 class Publish(BaseModel):
     version: str
-    commit: str
     metadata: Any | None
     metadata_errors: str | None
     readme: str | None
@@ -107,6 +132,7 @@ class Publish(BaseModel):
 @app.post("/publish")
 def publish(publish: Publish,
             token: IDToken = Depends(authenticate_user),
+            github_token: str = Header(),
             session: Session = Depends(get_session)) -> None:
     
     #if id_token.repository_visibility == "private":
@@ -154,19 +180,22 @@ def publish(publish: Publish,
                 "message": f"Version {publish.version} already exists"
             })
     
-    #headers = {
-        #"Authorization": f"Bearer {token_raw}",
-        #"X-GitHub-Api-Version": "2022-11-28",
-        #"Accept": "application/vnd.github+json"
-    #}
-    #ref_response = requests.get(f"https://api.github.com/repos/{owner_name}/{repository_name}\
-    # /git/ref/tags/{publish.version}", headers=headers).json()
+    github_headers = {
+        "Authorization": f"Bearer {github_token}",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Accept": "application/vnd.github+json"
+    }
+    ref_response = requests.get(
+        f"https://api.github.com/repos/{owner_name}/{repository_name}/git/ref/tags/{publish.version}",
+        headers=github_headers)
+    ref_response.raise_for_status()
+    commit = ref_response.json()['object']['sha']
  
     release = Release(
         repo_id=repo.id,
         version=version,
         readme=publish.readme,
-        commit=publish.commit,
+        commit=commit,
         meta_data=publish.metadata,
         meta_data_errors=publish.metadata_errors,
         outputs=publish.outputs,
@@ -174,7 +203,31 @@ def publish(publish: Publish,
     )
     session.add(release)
     session.commit()
+    session.refresh(release)
 
-    # TODO: index README, description
+    # index README
+    try:
+        description = publish.metadata['description']
+    except Exception:
+        description = ''
+
+    path = f"{owner_name}/{repository_name}/{commit}/{publish.readme}"
+    readme_response = requests.get(
+        f"https://raw.githubusercontent.com/{path}",
+        headers=github_headers
+    )
+    readme_response.raise_for_status()
+
+    document = {
+        'description': description,
+        'readme': readme_response.text,
+        'outputs': str(publish.outputs),
+    }
+    opensearch.index(
+        index = opensearch_index,
+        body = document,
+        id = release.id,
+        refresh = True
+    )
 
     return {}

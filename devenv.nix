@@ -19,8 +19,7 @@
 
   languages.elm.enable = true;
 
-  # 15:07:07 opensearch.1 | java.lang.RuntimeException: can not run opensearch as root
-  #services.opensearch.enable = true;
+  services.opensearch.enable = true;
   services.postgres.enable = !config.container.isBuilding;
   services.caddy.enable = true;
   services.caddy.virtualHosts.":8888" = {

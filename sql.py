@@ -18,7 +18,9 @@ class GitHubRepo(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     owner_id: int = Field(default=None, foreign_key="githubowner.id")
-    owner: GitHubOwner = Relationship(back_populates="repos")
+    owner: GitHubOwner = Relationship(
+        back_populates="repos",
+        sa_relationship_kwargs={"lazy": "joined"})
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
     )
@@ -29,7 +31,9 @@ class GitHubRepo(SQLModel, table=True):
 class Release(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     repo_id: int = Field(default=None, foreign_key="githubrepo.id")
-    repo: GitHubRepo = Relationship(back_populates="releases")
+    repo: GitHubRepo = Relationship(
+        back_populates="releases",
+        sa_relationship_kwargs={"lazy": "joined"})
     
     readme: Optional[str]
     version: str = Field(sa_column_kwargs={"unique": True})
