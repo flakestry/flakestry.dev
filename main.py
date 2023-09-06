@@ -77,7 +77,7 @@ async def validation_exception_handler(
          422: {"model": ValidationError},
      },
 )
-async def get_flakes():
+def get_flakes():
     return {"flakes": [
 
     ]}
@@ -88,7 +88,7 @@ async def get_flakes():
          422: {"model": ValidationError},
      },
 )
-async def read_org(org: str):
+def read_org(org: str):
     return {
         "flakes": []
     }
@@ -99,7 +99,7 @@ async def read_org(org: str):
         422: {"model": ValidationError},
     },
 )
-async def read_repo(org: str, repo: str):
+def read_repo(org: str, repo: str):
     versions = ["1.1.2", "1.0.0", "1.3.3", "1.0.12", "1.0.2"]
     versions.sort(key=StrictVersion)
     latest = versions[-1]
@@ -112,6 +112,6 @@ async def read_repo(org: str, repo: str):
         422: {"model": ValidationError},
     },
 )
-async def read_item(id_token: IDToken = Depends(authenticate_user)):
+def read_item(id_token: IDToken = Depends(authenticate_user)):
     print(id_token)
     return {}
