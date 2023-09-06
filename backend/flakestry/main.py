@@ -25,6 +25,12 @@ app.openapi_version="3.0.0"
 def on_startup():
     create_db_and_tables()
 
+# TODO: make the routes more visible from a glance
+app.include_router(flakestry.api.publish.router)
+app.include_router(flakestry.api.flake.router)
+
+FastAPIInstrumentor.instrument_app(app)
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(
     request: Request,
@@ -35,7 +41,3 @@ async def validation_exception_handler(
         content=jsonable_encoder({"detail": exc.errors(), "body": exc.body}),
     )
 
-app.include_router(flakestry.api.publish.router, prefix="/api")
-app.include_router(flakestry.api.flake.router, prefix="/api")
-
-FastAPIInstrumentor.instrument_app(app)
