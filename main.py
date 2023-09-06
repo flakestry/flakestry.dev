@@ -3,6 +3,7 @@ import re
 from datetime import datetime
 import os
 import requests
+from functools import lru_cache
 from fastapi import FastAPI, Depends, Header, Request, Response, status
 from fastapi.openapi.utils import get_openapi
 from fastapi.encoders import jsonable_encoder
@@ -68,14 +69,17 @@ async def validation_exception_handler(
 app.openapi = flakestry_openapi
 FastAPIInstrumentor.instrument_app(app)
 
-
-opensearch = OpenSearch(
-    hosts = [{'host': 'localhost', 'port': 9200}],
-)
-
 opensearch_index = "flakes"
-if not opensearch.indices.exists(index=opensearch_index):
-    response = opensearch.indices.create(opensearch_index, body={})
+
+@lru_cache()
+def get_opensearch():
+    opensearch = OpenSearch(
+        hosts = [{'host': 'localhost', 'port': 9200}],
+    )
+
+    if not opensearch.indices.exists(index=opensearch_index):
+        opensearch.indices.create(opensearch_index, body={})
+    return opensearch
 
 # TODO: use pydantic_settings: fails to compile pyyaml
 oidc_audience = os.environ['OIDC_AUDIENCE']
@@ -118,6 +122,7 @@ class FlakesResponse(BaseModel):
             422: {"model": ValidationError},
          })
 def get_flakes( session: Session = Depends(get_session)
+              , opensearch: OpenSearch = Depends(get_opensearch)
               , q: Union[str, None] = None) -> FlakesResponse:
     if q:
         response = opensearch.search(
@@ -195,6 +200,7 @@ class Publish(BaseModel):
 def publish(publish: Publish,
             token: IDToken = Depends(authenticate_user),
             github_token: str = Header(),
+            opensearch: OpenSearch = Depends(get_opensearch),
             session: Session = Depends(get_session)) -> None:
     
     #if id_token.repository_visibility == "private":
