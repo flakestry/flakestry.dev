@@ -5,7 +5,6 @@ import os
 import requests
 from functools import lru_cache
 from fastapi import FastAPI, Depends, Header, Request, Response, status
-from fastapi.openapi.utils import get_openapi
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
@@ -20,29 +19,17 @@ from opensearchpy import OpenSearch
 from sql import create_db_and_tables, GitHubOwner, GitHubRepo, Release, engine
 
 app = FastAPI(
+    title="Flakestry.dev",
+    version="0.0.1",
+    openapi_version="3.0.0",
     # The subpath for our API.
     # Allows the API docs to find the correct path to the OpenAPI spec.
     root_path="/api",
 )
 
-# Override the schema to use OpenAPI 3.0.0.
-# OpenAPI 3.1 is not supported by openapi-generator.
-# https://fastapi.tiangolo.com/how-to/extending-openapi/
-def flakestry_openapi():
-    if app.openapi_schema:
-        return app.openapi_schema
-
-    openapi_schema = get_openapi(
-        title="Flakestry.dev",
-        version="0.0.1",
-        openapi_version="3.0.0",
-        routes=app.routes,
-        servers=app.servers,
-    )
-
-    # Cache the schema
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
+# Override the default OpenAPI version.
+# openapi-generator does not currently support 3.1.0.
+app.openapi_version="3.0.0"
 
 class ErrorDetail(BaseModel):
     loc: list[str]
@@ -66,7 +53,6 @@ async def validation_exception_handler(
         content=jsonable_encoder({"detail": exc.errors(), "body": exc.body}),
     )
 
-app.openapi = flakestry_openapi
 FastAPIInstrumentor.instrument_app(app)
 
 opensearch_index = "flakes"

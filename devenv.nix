@@ -51,7 +51,7 @@
   # An alternative would be to specify the server URL when created the FastAPI app.
   # You can also set the `--server-variables` option to fill in template variables in the server URL.
   scripts.generate-elm-api.exec = ''
-    python ${config.devenv.root}/gen_openapi.py
+    python ${config.devenv.root}/api/gen_openapi.py
 
     echo generating frontend/generated-api
     openapi-generator-cli generate \
@@ -59,14 +59,14 @@
       --generator-name elm \
       --output ${config.devenv.root}/frontend/generated-api
 
-    root_path=$(curl $openapi_url | jq '.servers[0].url')
+    root_path=$(cat ${config.devenv.root}/frontend/openapi.json | jq '.servers[0].url')
 
     sed -i "s#Url.Builder.crossOrigin req.basePath req.pathParams#Url.Builder.absolute ($root_path :: req.pathParams)#g" \
       ${config.devenv.root}/frontend/generated-api/src/Api.elm
   '';
 
   processes = {
-    backend.exec = "cd ${config.devenv.root} && uvicorn main:app --reload";
+    backend.exec = "cd ${config.devenv.root} && uvicorn --app-dir api --reload main:app";
   } // lib.optionalAttrs (!config.container.isBuilding) {
     frontend.exec = "cd ${config.devenv.root}/frontend && elm-land server";
   };
