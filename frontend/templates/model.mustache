@@ -5,7 +5,9 @@ module Api.Data exposing
 {{/model}}{{/models}}{{#models}}{{#model}}    , {{#lambda.camelcase}}encode{{classname}}{{/lambda.camelcase}}
 {{/model}}{{/models}}{{#models}}{{#model}}{{#isEnum}}    , stringFrom{{^paramName}}{{classname}}{{/paramName}}{{enumName}}
 {{/isEnum}}{{/model}}{{/models}}{{#models}}{{#model}}    , {{#lambda.camelcase}}{{classname}}{{/lambda.camelcase}}Decoder
-{{/model}}{{/models}}    )
+{{/model}}{{/models}}    , AnyType
+    , anyTypeDecoder
+    )
 
 import Api{{#includeTime}}
 import Api.Time exposing (Posix){{/includeTime}}
@@ -52,6 +54,24 @@ import Uuid exposing (Uuid){{/includeUuid}}
 
 
 -- HELPER
+
+
+type alias AnyType = ()
+
+
+anyTypeDecoder : Json.Decode.Decoder AnyType
+anyTypeDecoder = Json.Decode.succeed ()
+
+
+type alias JsonObject = Json.Decode.Value
+
+
+encodeJsonObject : JsonObject -> Json.Encode.Value
+encodeJsonObject = identity
+
+
+jsonObjectDecoder : Json.Decode.Decoder JsonObject
+jsonObjectDecoder = Json.Decode.value
 
 
 type alias EncodedField =
