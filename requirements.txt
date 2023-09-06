@@ -1,9 +1,0 @@
-fastapi
-fastapi_oidc
-opentelemetry-instrumentation-fastapi
-uvicorn
-sqlmodel
-psycopg2
-requests
-packaging
-opensearch-py
