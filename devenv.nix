@@ -3,6 +3,7 @@
     pkgs.flyctl
     pkgs.cloudflared
     pkgs.openapi-generator-cli
+    pkgs.nodePackages.pyright
   ];
 
   env.LD_LIBRARY_PATH = "";
