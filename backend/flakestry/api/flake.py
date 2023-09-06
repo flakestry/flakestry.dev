@@ -1,8 +1,9 @@
 from typing import List, Union
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
+from fastapi.exceptions import HTTPException
 from pydantic import BaseModel
 from datetime import datetime
-from sqlmodel import Session, select
+from sqlmodel import Session, select, col
 from opensearchpy import OpenSearch
 from packaging.version import parse
 
@@ -29,12 +30,13 @@ class RepoResponse(BaseModel):
 router = APIRouter()
 
 @router.get("/flake",
-         responses={
-            422: {"model": ValidationError},
-         })
+    response_model=FlakesResponse,
+    responses={
+        422: {"model": ValidationError},
+    })
 def get_flakes( session: Session = Depends(get_session)
               , opensearch: OpenSearch = Depends(get_opensearch)
-              , q: Union[str, None] = None) -> FlakesResponse:
+              , q: Union[str, None] = None):
     if q:
         response = opensearch.search(
             body = {
@@ -49,35 +51,43 @@ def get_flakes( session: Session = Depends(get_session)
             index = opensearch_index
         )
         ids = [int(hit['_id']) for hit in response['hits']['hits']]
-        releases = session.exec(select(Release).where(Release.id.in_(ids))).all()
+        releases = session.exec(select(Release).where(col(Release.id).in_(ids))).all()
     else:
-        q = select(Release).order_by(Release.created_at.desc()).limit(10)
-        releases = session.exec(q).all()
+        statement = select(Release).order_by(col(Release.created_at)).limit(10)
+        releases = session.exec(statement).all()
+
     return {"releases": releases}
 
 @router.get("/flake/github/{owner}", 
-         responses={
-            422: {"model": ValidationError},
-         })
-def read_owner(owner: str, session: Session = Depends(get_session)) -> OwnerResponse:
-    select(GitHubRepo).join(GitHubOwner).where(GitHubOwner.name == owner)
-    repos = session.exec().all()
+    response_model=OwnerResponse,
+    responses={
+        422: {"model": ValidationError},
+    })
+def read_owner(owner: str, session: Session = Depends(get_session)):
+    q = select(GitHubRepo).join(GitHubOwner).where(GitHubOwner.name == owner)
+    repos = session.exec(q).all()
     return {
         "repos": repos
     }
 
 @router.get("/flake/github/{owner}/{repo}",
-         responses={
-            422: {"model": ValidationError},
-         })
+    response_model=RepoResponse,
+    responses={
+        422: {"model": ValidationError},
+    })
 def read_repo( owner: str
              , repo: str
-             , session: Session = Depends(get_session)) -> RepoResponse:
-    repo = session.exec(select(GitHubRepo).join(GitHubOwner)\
-        .where(GitHubOwner.name == owner).where(GitHubRepo.name == repo)).one()
+             , session: Session = Depends(get_session)):
+    statement = select(GitHubRepo).join(GitHubOwner)\
+        .where(GitHubOwner.name == owner).where(GitHubRepo.name == repo)
+    github_repo = session.exec(statement).first()
+
+    if not github_repo:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     # get all releases for repo
-    releases = session.exec(select(Release).where(Release.repo_id == repo.id)).all()
+    statement = select(Release).where(col(Release.repo_id) == github_repo.id)
+    releases = session.exec(statement).all()
     releases = sorted(releases, key=lambda r: parse(r.version))
     if releases:
         latest = releases[-1]
