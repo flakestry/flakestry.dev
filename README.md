@@ -26,15 +26,6 @@ Built using [elm.land](https://elm.land/) and [FastAPI](https://fastapi.tiangolo
    devenv up
    ```
 
-## TODO
-
-- [ ] fly.io deployment: staging.flakestry.dev, flakestry.dev
-- [ ] action to publish: evaluate, get flake metadata, outputs
-- [ ] /publish
-- [ ] /flake/github/{owner}
-- [ ] /flake/github/{owner}/{repo}
-- [ ] /flake?q= (opensearch)
-
 ## Roadmap
 
 - [ ] Prototype [semantic versioning of flakes](https://github.com/NixOS/rfcs/pull/144).

@@ -2,4 +2,8 @@ fastapi
 fastapi_oidc
 opentelemetry-instrumentation-fastapi
 uvicorn
-sqlalchemy
+sqlmodel
+psycopg2
+requests
+packaging
+opensearch-py

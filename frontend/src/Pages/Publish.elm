@@ -42,7 +42,8 @@ publishFlakeYaml =
 on:
     push:
         tags:
-        - "v?[0-9]+.[0-9]+.[0-9]+*"
+        - "v?[0-9]+.[0-9]+.[0-9]+"
+        - "v?[0-9]+.[0-9]+"
     workflow_dispatch:
         inputs:
             tag:
@@ -56,7 +57,7 @@ jobs:
             id-token: "write"
             contents: "read"
         steps:
-        - uses: flakestry/flakestry-publish@main
-            with:
-                version: "${{ inputs.tag }}"
-"""
+            - uses: flakestry/flakestry-publish@main
+              with:
+                version: "${{ inputs.tag || github.ref_name }}"
+    """
