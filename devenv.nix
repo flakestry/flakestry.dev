@@ -90,8 +90,8 @@
     frontend.exec = "cd ${config.devenv.root}/frontend && elm-land server";
   };
 
+  # TODO: make --name an option
   containers.processes.name = "flakestry-staging";
-  containers.processes.version = "staging";
   containers.processes.registry = "docker://registry.fly.io/";
   containers.processes.defaultCopyArgs = [
     "--dest-creds"
