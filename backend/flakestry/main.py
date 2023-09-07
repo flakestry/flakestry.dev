@@ -3,10 +3,18 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+import sentry_sdk
+import os
 
 from flakestry.sql import create_db_and_tables
 import flakestry.api.publish
 import flakestry.api.flake
+
+if os.environ.get("SENTRY_DSN", None):
+    sentry_sdk.init(
+        dsn=os.environ["SENTRY_DSN"],
+        traces_sample_rate=1.0,
+    )
 
 app = FastAPI(
     title="Flakestry.dev",
