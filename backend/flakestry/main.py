@@ -15,8 +15,9 @@ app = FastAPI(
     # The subpath for our API.
     # Allows the API docs to find the correct path to the OpenAPI spec.
     root_path="/api",
+    # TODO: replace with actual URL from env/settings
     servers=[
-        { "url": "/api" },
+        { "url": "http://localhost/api" },
     ],
 )
 
