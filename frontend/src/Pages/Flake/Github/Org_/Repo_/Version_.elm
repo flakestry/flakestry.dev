@@ -8,11 +8,16 @@ module Pages.Flake.Github.Org_.Repo_.Version_ exposing
     , view
     )
 
+import Api
+import Api.Data as Api
+import Api.Request.Default as Api
+import Api.Time as ApiTime
 import Components.File as File
 import Effect exposing (Effect)
 import Flakestry.Layout
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Http
 import Octicons
 import Page exposing (Page)
 import Route exposing (Route)
@@ -33,26 +38,31 @@ page _ route =
 
 
 -- INIT
+-- type alias Model =
+--     { org : String
+--     , repo : String
+--     , version : String
+--     , description : String
+--     , renderedReadme : String
+--     }
 
 
 type alias Model =
-    { org : String
-    , repo : String
-    , version : String
-    , description : String
-    , renderedReadme : String
-    }
+    { repo : Maybe Api.RepoResponse }
 
 
 init : String -> String -> String -> () -> ( Model, Effect Msg )
 init org repo version _ =
-    ( { org = org
-      , repo = repo
-      , version = version
-      , description = "A short and punchy description of the project"
-      , renderedReadme = fakeReadme
-      }
-    , Effect.none
+    -- ( { org = org
+    --   , repo = repo
+    --   , version = version
+    --   , description = "A short and punchy description of the project"
+    --   , renderedReadme = fakeReadme
+    --   }
+    ( { repo = Nothing }
+    , Effect.sendCmd <|
+        Api.send HandleGetRepoResponse <|
+            Api.readRepoFlakeGithubOwnerRepoGet org repo
     )
 
 
@@ -61,14 +71,23 @@ init org repo version _ =
 
 
 type Msg
-    = ExampleMsgReplaceMe
+    = HandleGetRepoResponse (Result Http.Error Api.RepoResponse)
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
-        ExampleMsgReplaceMe ->
-            ( model
+        HandleGetRepoResponse result ->
+            let
+                newModel =
+                    case result of
+                        Ok repo ->
+                            { model | repo = Just repo }
+
+                        Err _ ->
+                            model
+            in
+            ( newModel
             , Effect.none
             )
 
@@ -84,117 +103,71 @@ subscriptions model =
 
 
 -- VIEW
+-- view _ =
+--     { title = "", body = [] }
 
 
 view : Model -> View Msg
 view model =
-    { title = "Flake " ++ model.org ++ "/" ++ model.repo
+    -- { title = "Flake " ++ model.org ++ "/" ++ model.repo
+    { title = ""
     , body =
         [ Flakestry.Layout.viewNav
-        , div [ class "container max-w-5xl px-4" ]
-            [ div [ class "py-16 leading-6" ]
-                [ h2 [ class "inline-flex items-center font-semibold text-2xl" ]
-                    [ img [ class "inline h-7 w-7 rounded border border-slate-300", src ("https://github.com/" ++ model.org ++ ".png?size=128") ] []
-                    , a
-                        [ class "ml-2 hover:text-sky-500"
-                        , Route.Path.href (Route.Path.Flake_Github_Org_ { org = model.org })
-                        ]
-                        [ text model.org ]
-                    , span [ class "mx-2" ] [ text "/" ]
-                    , a
-                        [ class "hover:text-sky-500"
-                        , Route.Path.href (Route.Path.Flake_Github_Org__Repo_ { org = model.org, repo = model.repo })
-                        ]
-                        [ text model.repo ]
-                    ]
-                , p [ class "mt-3 text-lg" ] [ text "Some detailed description of the repo" ]
-                , button
-                    [ class "flex items-center justify-between mt-6 pl-2 pr-3 py-2 border rounded shadow-sm text-slate-900 bg-slate-100"
-                    , type_ "button"
-                    , attribute "aria-label" "Version"
-                    ]
-                    [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline" |> Octicons.tag
-                    , span [ class "ml-2" ] [ text model.version ]
+        , case model.repo of
+            Just response ->
+                case response.latest of
+                    Nothing ->
+                        div [] []
 
-                    -- TODO: add a latest tag to the latest version
-                    -- , span [ class "ml-2 text-slate-600" ] [ text "(latest)" ]
-                    , Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline ml-3" |> Octicons.chevronDown
-                    ]
-                ]
-            , File.defaultOptions
-                |> File.fileName "README"
-                |> File.contents model.renderedReadme
-                |> File.view
-            ]
+                    Just release ->
+                        div [ class "container max-w-5xl px-4" ]
+                            [ div [ class "py-16 leading-6" ]
+                                [ h2 [ class "inline-flex items-center font-semibold text-2xl" ]
+                                    [ img [ class "inline h-7 w-7 rounded border border-slate-300", src ("https://github.com/" ++ release.owner ++ ".png?size=128") ] []
+                                    , a
+                                        [ class "ml-2 hover:text-sky-500"
+                                        , Route.Path.href (Route.Path.Flake_Github_Org_ { org = release.owner })
+                                        ]
+                                        [ text release.owner ]
+                                    , span [ class "mx-2" ] [ text "/" ]
+                                    , a
+                                        [ class "hover:text-sky-500"
+                                        , Route.Path.href (Route.Path.Flake_Github_Org__Repo_ { org = release.owner, repo = release.repo })
+                                        ]
+                                        [ text release.repo ]
+                                    ]
+                                , p [ class "mt-3 text-lg" ] [ text release.description ]
+                                , p [ class "mt-3 text-sm inline-flex items-center" ]
+                                    [ Octicons.defaultOptions
+                                        |> Octicons.color "currentColor"
+                                        |> Octicons.class "inline"
+                                        |> Octicons.clock
+                                    , span [ class "ml-1" ]
+                                        [ text <|
+                                            ApiTime.dateTimeToString release.createdAt
+                                        ]
+                                    ]
+                                , button
+                                    [ class "flex items-center justify-between mt-6 pl-2 pr-3 py-2 border rounded shadow-sm text-slate-900 bg-slate-100"
+                                    , type_ "button"
+                                    , attribute "aria-label" "Version"
+                                    ]
+                                    [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline" |> Octicons.tag
+                                    , span [ class "ml-2" ] [ text release.version ]
+
+                                    -- TODO: add a latest tag to the latest version
+                                    -- , span [ class "ml-2 text-slate-600" ] [ text "(latest)" ]
+                                    , Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline ml-3" |> Octicons.chevronDown
+                                    ]
+                                ]
+                            , File.defaultOptions
+                                |> File.fileName "README"
+                                |> File.contents release.readme
+                                |> File.view
+                            ]
+
+            Nothing ->
+                div [] []
         , Flakestry.Layout.viewFooter
         ]
     }
-
-
-fakeReadme : String
-fakeReadme =
-    """
-# devenv.sh - Fast, Declarative, Reproducible, and Composable Developer Environments
-
-[![Built with Nix](https://builtwithnix.org/badge.svg)](https://builtwithnix.org)
-[![Discord channel](https://img.shields.io/discord/1036369714731036712?color=7389D8&label=discord&logo=discord&logoColor=ffffff)](https://discord.gg/naMgvexb6q)
-![License: Apache 2.0](https://img.shields.io/github/license/cachix/devenv)
-[![Version](https://img.shields.io/github/v/release/cachix/devenv?color=green&label=version&sort=semver)](https://github.com/cachix/devenv/releases)
-[![CI](https://github.com/cachix/devenv/actions/workflows/buildtest.yml/badge.svg)](https://github.com/cachix/devenv/actions/workflows/buildtest.yml?branch=main)
-
-![logo](docs/assets/logo.webp)
-
-Running ``devenv init`` generates ``devenv.nix``:
-
-```nix
-{ pkgs, ... }:
-
-{
-  # https://devenv.sh/basics/
-  env.GREET = "devenv";
-
-  # https://devenv.sh/packages/
-  packages = [ pkgs.git ];
-
-  enterShell = ''
-    hello
-    git --version
-  '';
-
-  # https://devenv.sh/languages/
-  languages.nix.enable = true;
-
-  # https://devenv.sh/scripts/
-  scripts.hello.exec = "echo hello from $GREET";
-
-  # https://devenv.sh/pre-commit-hooks/
-  pre-commit.hooks.shellcheck.enable = true;
-
-  # https://devenv.sh/processes/
-  # processes.ping.exec = "ping example.com";
-}
-
-```
-
-And ``devenv shell`` activates the environment.
-
-## Commands
-
-- ``devenv init``:           Scaffold devenv.yaml, devenv.nix, and .envrc.
-- ``devenv shell``:          Activate the developer environment.
-- ``devenv shell CMD ARGS``: Run CMD with ARGS in the developer environment.
-- ``devenv update``:         Update devenv.lock from devenv.yaml inputs. See http://devenv.sh/inputs/#locking-and-updating-inputs.
-- ``devenv up``:             Start processes in foreground. See http://devenv.sh/processes.
-- ``devenv gc``:             Remove old devenv generations. See http://devenv.sh/garbage-collection.
-- ``devenv ci``:             Build your developer environment and make sure all checks pass.
-
-## Documentation
-
-- [Getting Started](https://devenv.sh/getting-started/)
-- [Basics](https://devenv.sh/basics/)
-- [Roadmap](https://devenv.sh/roadmap/)
-- [Blog](https://devenv.sh/blog/)
-- [`devenv.yaml` reference](https://devenv.sh/reference/yaml-options/)
-- [`devenv.nix` reference](https://devenv.sh/reference/options/)
-- [Contributing](https://devenv.sh/community/contributing/)
-             """

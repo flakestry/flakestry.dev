@@ -69,7 +69,14 @@ view options =
                             )
                         |> Maybe.withDefault []
                    )
-        , pre []
-            [ Markdown.toHtml [ HA.class "px-4 py-4 content overflow-x-scroll" ] options.contents
-            ]
+        , Markdown.toHtmlWith readmeOptions [ HA.class "px-4 py-4 content overflow-x-scroll" ] options.contents
         ]
+
+
+readmeOptions : Markdown.Options
+readmeOptions =
+    let
+        defaults =
+            Markdown.defaultOptions
+    in
+    { defaults | sanitize = False }

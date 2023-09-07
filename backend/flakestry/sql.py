@@ -16,6 +16,7 @@ class GitHubOwner(SQLModel, table=True):
 class GitHubRepo(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
+    description: Optional[str]
     owner_id: int = Field(default=None, foreign_key="githubowner.id")
     owner: GitHubOwner = Relationship(
         back_populates="repos",
@@ -50,7 +51,6 @@ class Release(SQLModel, table=True):
         sa_column=Column(JSONB)
     )
     outputs_errors: Optional[str]
-
 
 host = os.environ.get('PGHOST', None)
 
