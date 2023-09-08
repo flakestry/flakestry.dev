@@ -16,19 +16,12 @@ def main() -> None:
 
     create_db_and_tables()
 
-    cachix = GitHubOwner(name="cachix")
     nixos = GitHubOwner(name="nixos")
     nix_community = GitHubOwner(name="nix-community")
 
-    session.add(cachix)
     session.add(nixos)
     session.add(nix_community)
 
-    cachix_repo = GitHubRepo(
-        name="cachix",
-        description="Cachix CLI",
-        owner=cachix,
-    )
     nixos_repo = GitHubRepo(
         name="nixpkgs",
         description="Nix Packages collection & NixOS",
@@ -39,27 +32,22 @@ def main() -> None:
         description="Nix, the purely functional package manager",
         owner=nixos,
     )
-    nix_community_repo = GitHubRepo(
-        name="nix-community",
+    home_manager_repo = GitHubRepo(
+        name="home-manager",
         description="",
         owner=nix_community,
     )
+    disko_repo = GitHubRepo(
+        name="disko",
+        description="Format disks with nix-config [maintainer=@Lassulus]",
+        owner=nix_community,
+    )
 
-    session.add(cachix_repo)
     session.add(nixos_repo)
     session.add(nix_repo)
-    session.add(nix_community_repo)
+    session.add(home_manager_repo)
+    session.add(disko_repo)
 
-    cachix_release = Release(
-        repo=cachix_repo,
-        version="1.0.0",
-        readme="<h1>Cachix</h1>",
-        commit="123",
-        meta_data={},
-        meta_data_errors="",
-        outputs={},
-        outputs_errors="",
-    )
     nixpkgs_release = Release(
         repo=nixos_repo,
         version="23.05",
@@ -70,9 +58,19 @@ def main() -> None:
         outputs={},
         outputs_errors="",
     )
+    home_manager_release = Release(
+        repo=home_manager_repo,
+        version="23.05",
+        readme="<h1>Home Manager</h1>",
+        commit="123",
+        meta_data={},
+        meta_data_errors="",
+        outputs={},
+        outputs_errors="",
+    )
 
-    session.add(cachix_release)
     session.add(nixpkgs_release)
+    session.add(home_manager_release)
 
     session.commit()
 
