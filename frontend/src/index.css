@@ -2,3 +2,31 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* GitHub Markdown overrides */
+
+.markdown-body {
+  [href$="#gh-dark-mode-only"] {
+    display: none;
+  }
+
+  img,
+  svg,
+  video,
+  canvas,
+  audio,
+  iframe,
+  embed,
+  object {
+    /* Undo "display: block" to match GitHub's placement */
+    display: revert;
+  }
+
+  ul {
+    list-style: revert;
+  }
+
+  ol {
+    list-style: revert;
+  }
+}

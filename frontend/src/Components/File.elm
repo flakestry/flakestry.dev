@@ -69,7 +69,7 @@ view options =
                             )
                         |> Maybe.withDefault []
                    )
-        , Markdown.toHtmlWith readmeOptions [ HA.class <| String.join " " [ "px-4 py-4 overflow-x-scroll", options.class_ ] ] options.contents
+        , Markdown.toHtmlWith readmeOptions [ HA.class <| String.join " " [ "px-8 py-8 overflow-x-scroll", options.class_ ] ] options.contents
         ]
 
 

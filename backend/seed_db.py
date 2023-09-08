@@ -1,3 +1,4 @@
+import os
 from flakestry.sql import (
     create_db_and_tables,
     get_session,
@@ -6,6 +7,7 @@ from flakestry.sql import (
     Release,
 )
 
+# TODO: reuse /publish logic for this
 def main() -> None:
     session = next(get_session())
 
@@ -48,26 +50,31 @@ def main() -> None:
     session.add(home_manager_repo)
     session.add(disko_repo)
 
-    nixpkgs_release = Release(
-        repo=nixos_repo,
-        version="23.05",
-        readme="<h1>Nixpkgs</h1>\n<p>Some text</p>",
-        commit="123",
-        meta_data={},
-        meta_data_errors="",
-        outputs={},
-        outputs_errors="",
-    )
-    home_manager_release = Release(
-        repo=home_manager_repo,
-        version="23.05",
-        readme="<h1>Home Manager</h1>",
-        commit="123",
-        meta_data={},
-        meta_data_errors="",
-        outputs={},
-        outputs_errors="",
-    )
+    pwd = os.path.dirname(__file__)
+    with open(os.path.join(pwd, "seed/nixpkgs-readme.md"), "r") as f:
+        readme = f.read()
+        nixpkgs_release = Release(
+            repo=nixos_repo,
+            version="23.05",
+            readme=readme,
+            commit="123",
+            meta_data={},
+            meta_data_errors="",
+            outputs={},
+            outputs_errors="",
+        )
+    with open(os.path.join(pwd, "seed/home-manager-readme.md"), "r") as f:
+        readme = f.read()
+        home_manager_release = Release(
+            repo=home_manager_repo,
+            version="23.05",
+            readme=readme,
+            commit="123",
+            meta_data={},
+            meta_data_errors="",
+            outputs={},
+            outputs_errors="",
+        )
 
     session.add(nixpkgs_release)
     session.add(home_manager_release)
