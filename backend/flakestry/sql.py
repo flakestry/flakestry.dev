@@ -1,7 +1,14 @@
 from typing import Optional, List, Any
 import os
 from datetime import datetime
-from sqlmodel import Session, Field, Relationship, SQLModel, create_engine
+from sqlmodel import (
+    Session,
+    Field,
+    Relationship,
+    SQLModel,
+    UniqueConstraint,
+    create_engine,
+)
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -29,6 +36,10 @@ class GitHubRepo(SQLModel, table=True):
 
 
 class Release(SQLModel, table=True):
+    __table_args__ = (
+        UniqueConstraint("repo_id", "version", name="unique_repo_version"),
+    )
+
     id: Optional[int] = Field(default=None, primary_key=True)
     repo_id: int = Field(default=None, foreign_key="githubrepo.id")
     repo: GitHubRepo = Relationship(
@@ -36,7 +47,7 @@ class Release(SQLModel, table=True):
         sa_relationship_kwargs={"lazy": "joined"})
 
     readme: Optional[str]
-    version: str = Field(sa_column_kwargs={"unique": True})
+    version: str
     commit: str
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
