@@ -17,7 +17,7 @@ app = FastAPI(
     root_path="/api",
     # TODO: replace with actual URL from env/settings
     servers=[
-        { "url": "http://localhost/api" },
+        { "url": "api" },
     ],
 )
 
