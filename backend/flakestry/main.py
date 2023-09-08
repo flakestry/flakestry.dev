@@ -19,7 +19,6 @@ if os.environ.get("SENTRY_DSN", None):
 app = FastAPI(
     title="Flakestry.dev",
     version="0.0.1",
-    openapi_version="3.0.0",
     # The subpath for our API.
     # Allows the API docs to find the correct path to the OpenAPI spec.
     root_path="/api",
