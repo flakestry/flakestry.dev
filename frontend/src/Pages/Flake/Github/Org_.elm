@@ -9,10 +9,9 @@ import Flakestry.Layout
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
-import Octicons
 import Page exposing (Page)
+import RemoteData exposing (WebData)
 import Route exposing (Route)
-import Route.Path
 import Shared
 import View exposing (View)
 
@@ -32,12 +31,12 @@ page shared route =
 
 
 type alias Model =
-    { repos : Api.Data.OwnerResponse }
+    { ownerResponse : WebData Api.Data.OwnerResponse }
 
 
 init : String -> () -> ( Model, Effect Msg )
 init org () =
-    ( { repos = Api.Data.OwnerResponse [] }
+    ( { ownerResponse = RemoteData.NotAsked }
     , Effect.sendCmd <|
         Api.send HandleGetOwnerResponse <|
             Api.readOwnerFlakeGithubOwnerGet org
@@ -56,7 +55,7 @@ update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
         HandleGetOwnerResponse result ->
-            ( { model | repos = result |> Result.withDefault (Api.Data.OwnerResponse []) }
+            ( { model | ownerResponse = RemoteData.fromResult result }
             , Effect.none
             )
 
@@ -84,7 +83,10 @@ view org model =
                 [ img [ class "inline h-7 w-7 rounded border border-slate-300", src ("https://github.com/" ++ org ++ ".png?size=128") ] []
                 , span [ class "ml-2" ] [ text org ]
                 ]
-            , viewRepoCard model.repos.repos
+            , RemoteData.unwrap
+                (div [] [])
+                (\response -> response |> .repos |> viewRepoCard)
+                model.ownerResponse
             ]
         , Flakestry.Layout.viewFooter
         ]

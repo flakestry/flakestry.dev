@@ -20,6 +20,7 @@ import Html.Attributes exposing (..)
 import Http
 import Octicons
 import Page exposing (Page)
+import RemoteData exposing (WebData)
 import Route exposing (Route)
 import Route.Path
 import Shared
@@ -37,12 +38,12 @@ page _ route =
 
 
 type alias Model =
-    { repo : Maybe Api.RepoResponse }
+    { repoResponse : WebData Api.RepoResponse }
 
 
 init : String -> String -> String -> () -> ( Model, Effect Msg )
 init org repo version _ =
-    ( { repo = Nothing }
+    ( { repoResponse = RemoteData.NotAsked }
     , Effect.sendCmd <|
         Api.send HandleGetRepoResponse <|
             Api.readRepoFlakeGithubOwnerRepoGet org repo
@@ -60,17 +61,8 @@ type Msg
 update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
-        HandleGetRepoResponse result ->
-            let
-                newModel =
-                    case result of
-                        Ok repo ->
-                            { model | repo = Just repo }
-
-                        Err _ ->
-                            model
-            in
-            ( newModel
+        HandleGetRepoResponse response ->
+            ( { model | repoResponse = RemoteData.fromResult response }
             , Effect.none
             )
 
@@ -88,7 +80,7 @@ view : Model -> View Msg
 view model =
     let
         latestRelease =
-            model.repo |> Maybe.andThen .latest
+            model.repoResponse |> RemoteData.toMaybe |> Maybe.andThen .latest
 
         title =
             latestRelease
