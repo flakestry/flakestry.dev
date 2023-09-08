@@ -21,6 +21,10 @@ class GitHubOwner(SQLModel, table=True):
     repos: List["GitHubRepo"] = Relationship(back_populates="owner")
 
 class GitHubRepo(SQLModel, table=True):
+    __table_args__ = (
+        UniqueConstraint("owner_id", "name", name="unique_owner_name"),
+    )
+
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     description: Optional[str]
@@ -32,7 +36,6 @@ class GitHubRepo(SQLModel, table=True):
         default_factory=datetime.utcnow,
     )
     releases: List["Release"] = Relationship(back_populates="repo")
-    # TODO: unique owner_id, name
 
 
 class Release(SQLModel, table=True):
