@@ -69,9 +69,10 @@ class Release(SQLModel, table=True):
 host = os.environ.get('PGHOST', None)
 
 if host:
-    engine_url = f"postgresql://flakestry?host={host}"
+    engine_url = f"postgresql+pg8000://flakestry?host={host}"
 else:
-    engine_url = os.environ['DATABASE_URL']
+    scheme, rest = os.environ['DATABASE_URL'].split("://")
+    engine_url = f"{scheme}+pg8000://{rest}"
 
 engine = create_engine(engine_url)
 
