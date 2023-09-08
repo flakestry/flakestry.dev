@@ -9,6 +9,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
+import Json.Decode as Decode
 import RemoteData exposing (WebData)
 import Svg
 import Svg.Attributes as SvgAttr
@@ -26,6 +27,7 @@ type Msg
     | Search
     | HandleSearchResponse (Result Http.Error Api.FlakesResponse)
     | Debounce (Debouncer.Msg Msg)
+    | KeyDown String
 
 
 init : Model
@@ -34,8 +36,8 @@ init =
     , searchResponse = RemoteData.NotAsked
     , debouncer =
         Debouncer.manual
-            |> Debouncer.settleWhenQuietFor (Just <| Debouncer.fromSeconds 0.2)
-            |> Debouncer.emitWhileUnsettled (Just <| Debouncer.fromSeconds 0.25)
+            |> Debouncer.settleWhenQuietFor (Just <| Debouncer.fromSeconds 3.5)
+            |> Debouncer.emitWhileUnsettled (Just <| Debouncer.fromSeconds 0.5)
             |> Debouncer.toDebouncer
     }
 
@@ -100,6 +102,13 @@ update msg model =
                 Nothing ->
                     ( updatedModel, Effect.sendCmd mappedCmd )
 
+        KeyDown key ->
+            if key == "Enter" then
+                ( model, Effect.sendMsg Search )
+
+            else
+                ( model, Effect.none )
+
 
 view : { onSearch : Msg -> msg } -> Model -> Html msg
 view props model =
@@ -123,7 +132,18 @@ view props model =
             , placeholder "Search for flakes..."
             , type_ "text"
             , name "search"
-            , onInput (\query -> query |> SetQuery |> props.onSearch)
+            , onInput (\query -> SetQuery query |> props.onSearch)
+            , onKeyDown (\keyCode -> KeyDown keyCode |> props.onSearch)
             ]
             []
         ]
+
+
+onKeyDown : (String -> msg) -> Attribute msg
+onKeyDown tagger =
+    on "keydown" (Decode.map tagger keyDecoder)
+
+
+keyDecoder : Decode.Decoder String
+keyDecoder =
+    Decode.field "key" Decode.string
