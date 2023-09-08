@@ -1,5 +1,7 @@
 { config, pkgs, lib, ... }: {
   packages = [
+    pkgs.postgresql
+  ] ++ lib.optionals (!config.container.isBuilding) [
     pkgs.flyctl
     pkgs.cloudflared
     pkgs.openapi-generator-cli
@@ -20,7 +22,7 @@
 
   languages.elm.enable = true;
 
-  services.opensearch.enable = true;
+  services.opensearch.enable = !config.container.isBuilding;
   services.postgres.enable = !config.container.isBuilding;
   services.caddy.enable = true;
   services.caddy.virtualHosts.":8888" = {
