@@ -46,7 +46,7 @@ setCopyableContents value options =
 view : Options -> Html msg
 view options =
     div
-        [ HA.class <| "border border-slate-300 rounded-md shadow-sm overflow-hidden" ++ options.class_ ]
+        [ HA.class "border border-slate-300 rounded-md shadow-sm overflow-hidden" ]
         [ div [ HA.class "flex items-center justify-between px-4 py-2 border-b border-slate-300 bg-slate-100" ] <|
             h3
                 [ HA.class "inline-flex items-center text-slate-800 font-medium py-2"
@@ -69,7 +69,7 @@ view options =
                             )
                         |> Maybe.withDefault []
                    )
-        , Markdown.toHtmlWith readmeOptions [ HA.class "px-4 py-4 content overflow-x-scroll" ] options.contents
+        , Markdown.toHtmlWith readmeOptions [ HA.class <| String.join " " [ "px-4 py-4 overflow-x-scroll", options.class_ ] ] options.contents
         ]
 
 

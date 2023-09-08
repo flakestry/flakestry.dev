@@ -145,6 +145,7 @@ viewRelease release =
             ]
         , File.defaultOptions
             |> File.fileName "README"
+            |> File.class "markdown-body"
             |> File.contents release.readme
             |> File.view
         ]

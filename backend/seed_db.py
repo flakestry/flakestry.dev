@@ -51,7 +51,7 @@ def main() -> None:
     nixpkgs_release = Release(
         repo=nixos_repo,
         version="23.05",
-        readme="<h1>Nixpkgs</h1>",
+        readme="<h1>Nixpkgs</h1>\n<p>Some text</p>",
         commit="123",
         meta_data={},
         meta_data_errors="",
