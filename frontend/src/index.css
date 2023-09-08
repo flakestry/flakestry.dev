@@ -5,11 +5,11 @@
 
 /* GitHub Markdown overrides */
 
-.markdown-body {
-  [href$="#gh-dark-mode-only"] {
-    display: none;
-  }
+.markdown-body [href$="#gh-dark-mode-only"] {
+  display: none;
+}
 
+.markdown-body
   img,
   svg,
   video,
@@ -18,15 +18,14 @@
   iframe,
   embed,
   object {
-    /* Undo "display: block" to match GitHub's placement */
-    display: revert;
-  }
+  /* Undo "display: block" to match GitHub's placement */
+  display: revert;
+}
 
-  ul {
-    list-style: revert;
-  }
+.markdown-body ul {
+  list-style: revert;
+}
 
-  ol {
-    list-style: revert;
-  }
+.markdown-body ol {
+  list-style: revert;
 }
