@@ -45,6 +45,21 @@
     cd ${config.devenv.root}frontend && elm-land build
   '';
 
+  scripts.fetch-openapi-templates.exec =
+    let
+      openApiSrc = pkgs.fetchFromGitHub {
+        owner = "OpenAPITools";
+        repo = "openapi-generator";
+        rev = "v${pkgs.openapi-generator-cli.version}";
+        hash = "sha256-JKeNz+buV9lD6t1a/woiafmeS6T/v+e6xZeACn5FtZM=";
+      };
+    in
+    ''
+      ${pkgs.rsync}/bin/rsync --recursive --delete --chmod=ugo=rwX \
+        ${openApiSrc}/modules/openapi-generator/src/main/resources/elm/ \
+        ${config.devenv.root}/frontend/templates/
+    '';
+
   # Generate the Elm API client
   #
   # We replace the genererated cross-origin requests with requests to the same host.
@@ -56,11 +71,15 @@
     echo generating frontend/generated-api
     openapi-generator-cli generate \
       --input-spec ${config.devenv.root}/frontend/openapi.json \
+      --enable-post-process-file \
       --generator-name elm \
+      --template-dir ${config.devenv.root}/frontend/templates \
+      --type-mappings object=JsonObject \
       --output ${config.devenv.root}/frontend/generated-api
 
     root_path=$(cat ${config.devenv.root}/frontend/openapi.json | jq '.servers[0].url')
 
+    # Replace cross-origin requests with requests to the same host
     sed -i "s#Url.Builder.crossOrigin req.basePath req.pathParams#Url.Builder.absolute ($root_path :: req.pathParams)#g" \
       ${config.devenv.root}/frontend/generated-api/src/Api.elm
   '';

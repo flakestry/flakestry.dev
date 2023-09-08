@@ -1,17 +1,86 @@
-module Pages.Home_ exposing (page)
+module Pages.Home_ exposing (Model, Msg, page)
 
+import Api
+import Api.Data as Api
+import Api.Request.Default as Api
 import Components.FlakeCard
+import Effect exposing (Effect)
 import Flakestry.Layout
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Http
 import Octicons
+import Page exposing (Page)
+import RemoteData exposing (WebData)
+import Route exposing (Route)
+import Shared
 import Svg
 import Svg.Attributes as SvgAttr
 import View exposing (View)
 
 
-page : View msg
-page =
+page : Shared.Model -> Route () -> Page Model Msg
+page shared route =
+    Page.new
+        { init = init
+        , update = update
+        , subscriptions = subscriptions
+        , view = view
+        }
+
+
+
+-- INIT
+
+
+type alias Model =
+    { latestFlakesResponse : WebData Api.FlakesResponse }
+
+
+init : () -> ( Model, Effect Msg )
+init () =
+    ( { latestFlakesResponse = RemoteData.NotAsked }
+    , Effect.sendCmd <|
+        Api.send HandleFlakesResponse (Api.getFlakesFlakeGet Nothing)
+    )
+
+
+
+-- UPDATE
+
+
+type Msg
+    = HandleFlakesResponse (Result Http.Error Api.FlakesResponse)
+
+
+update : Msg -> Model -> ( Model, Effect Msg )
+update msg model =
+    case msg of
+        HandleFlakesResponse response ->
+            let
+                newModel =
+                    { model | latestFlakesResponse = RemoteData.fromResult response }
+            in
+            ( newModel
+            , Effect.none
+            )
+
+
+
+-- SUBSCRIPTIONS
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
+
+
+
+-- VIEW
+
+
+view : Model -> View msg
+view model =
     { title = "flakestry"
     , body =
         [ Flakestry.Layout.viewNav
@@ -51,22 +120,32 @@ page =
                     [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline h-5 w-5" |> Octicons.clock
                     , span [ class "ml-2" ] [ text "Recently released flakes" ]
                     ]
-                , div [ class "flex flex-col space-y-4 mt-12" ]
-                    [ Components.FlakeCard.view
-                        { username = "nix-community"
-                        , repo = "home-manager"
-                        , version = "v2.2"
-                        , description = "Some flake description."
-                        }
-                    , Components.FlakeCard.view
-                        { username = "nix-community"
-                        , repo = "disko"
-                        , version = "v1.0"
-                        , description = "Some flake description."
-                        }
-                    ]
+                , viewLatestFlakes model.latestFlakesResponse
                 ]
             ]
         , Flakestry.Layout.viewFooter
         ]
     }
+
+
+viewLatestFlakes : WebData Api.FlakesResponse -> Html msg
+viewLatestFlakes response =
+    case response of
+        RemoteData.Success flakes ->
+            div [ class "flex flex-col space-y-4 mt-12" ] <|
+                List.map
+                    (\flake ->
+                        Components.FlakeCard.view
+                            { username = flake.owner
+                            , repo = flake.repo
+                            , version = flake.version
+                            , description = flake.description
+                            }
+                    )
+                    flakes.releases
+
+        RemoteData.Failure _ ->
+            div [ class "mt-12" ] [ text "Failed to load flakes" ]
+
+        _ ->
+            div [ class "mt-12" ] [ text "Loading..." ]
