@@ -36,29 +36,12 @@ page _ route =
         }
 
 
-
--- INIT
--- type alias Model =
---     { org : String
---     , repo : String
---     , version : String
---     , description : String
---     , renderedReadme : String
---     }
-
-
 type alias Model =
     { repo : Maybe Api.RepoResponse }
 
 
 init : String -> String -> String -> () -> ( Model, Effect Msg )
 init org repo version _ =
-    -- ( { org = org
-    --   , repo = repo
-    --   , version = version
-    --   , description = "A short and punchy description of the project"
-    --   , renderedReadme = fakeReadme
-    --   }
     ( { repo = Nothing }
     , Effect.sendCmd <|
         Api.send HandleGetRepoResponse <|
@@ -101,73 +84,75 @@ subscriptions model =
     Sub.none
 
 
-
--- VIEW
--- view _ =
---     { title = "", body = [] }
-
-
 view : Model -> View Msg
 view model =
-    -- { title = "Flake " ++ model.org ++ "/" ++ model.repo
-    { title = ""
+    let
+        latestRelease =
+            model.repo |> Maybe.andThen .latest
+
+        title =
+            latestRelease
+                |> Maybe.map (\release -> "Flake " ++ release.owner ++ "/" ++ release.repo)
+                |> Maybe.withDefault ""
+
+        releaseBody =
+            latestRelease
+                |> Maybe.map viewRelease
+                |> Maybe.withDefault (div [] [])
+    in
+    { title = title
     , body =
         [ Flakestry.Layout.viewNav
-        , case model.repo of
-            Just response ->
-                case response.latest of
-                    Nothing ->
-                        div [] []
-
-                    Just release ->
-                        div [ class "container max-w-5xl px-4" ]
-                            [ div [ class "py-16 leading-6" ]
-                                [ h2 [ class "inline-flex items-center font-semibold text-2xl" ]
-                                    [ img [ class "inline h-7 w-7 rounded border border-slate-300", src ("https://github.com/" ++ release.owner ++ ".png?size=128") ] []
-                                    , a
-                                        [ class "ml-2 hover:text-sky-500"
-                                        , Route.Path.href (Route.Path.Flake_Github_Org_ { org = release.owner })
-                                        ]
-                                        [ text release.owner ]
-                                    , span [ class "mx-2" ] [ text "/" ]
-                                    , a
-                                        [ class "hover:text-sky-500"
-                                        , Route.Path.href (Route.Path.Flake_Github_Org__Repo_ { org = release.owner, repo = release.repo })
-                                        ]
-                                        [ text release.repo ]
-                                    ]
-                                , p [ class "mt-3 text-lg" ] [ text release.description ]
-                                , p [ class "mt-3 text-sm inline-flex items-center" ]
-                                    [ Octicons.defaultOptions
-                                        |> Octicons.color "currentColor"
-                                        |> Octicons.class "inline"
-                                        |> Octicons.clock
-                                    , span [ class "ml-1" ]
-                                        [ text <|
-                                            ApiTime.dateTimeToString release.createdAt
-                                        ]
-                                    ]
-                                , button
-                                    [ class "flex items-center justify-between mt-6 pl-2 pr-3 py-2 border rounded shadow-sm text-slate-900 bg-slate-100"
-                                    , type_ "button"
-                                    , attribute "aria-label" "Version"
-                                    ]
-                                    [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline" |> Octicons.tag
-                                    , span [ class "ml-2" ] [ text release.version ]
-
-                                    -- TODO: add a latest tag to the latest version
-                                    -- , span [ class "ml-2 text-slate-600" ] [ text "(latest)" ]
-                                    , Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline ml-3" |> Octicons.chevronDown
-                                    ]
-                                ]
-                            , File.defaultOptions
-                                |> File.fileName "README"
-                                |> File.contents release.readme
-                                |> File.view
-                            ]
-
-            Nothing ->
-                div [] []
+        , releaseBody
         , Flakestry.Layout.viewFooter
         ]
     }
+
+
+viewRelease : Api.FlakeRelease -> Html Msg
+viewRelease release =
+    div [ class "container max-w-5xl px-4" ]
+        [ div [ class "py-16 leading-6" ]
+            [ h2 [ class "inline-flex items-center font-semibold text-2xl" ]
+                [ img [ class "inline h-7 w-7 rounded border border-slate-300", src ("https://github.com/" ++ release.owner ++ ".png?size=128") ] []
+                , a
+                    [ class "ml-2 hover:text-sky-500"
+                    , Route.Path.href (Route.Path.Flake_Github_Org_ { org = release.owner })
+                    ]
+                    [ text release.owner ]
+                , span [ class "mx-2" ] [ text "/" ]
+                , a
+                    [ class "hover:text-sky-500"
+                    , Route.Path.href (Route.Path.Flake_Github_Org__Repo_ { org = release.owner, repo = release.repo })
+                    ]
+                    [ text release.repo ]
+                ]
+            , p [ class "mt-3 text-lg" ] [ text release.description ]
+            , p [ class "mt-3 text-sm inline-flex items-center" ]
+                [ Octicons.defaultOptions
+                    |> Octicons.color "currentColor"
+                    |> Octicons.class "inline"
+                    |> Octicons.clock
+                , span [ class "ml-1" ]
+                    [ text <|
+                        ApiTime.dateTimeToString release.createdAt
+                    ]
+                ]
+            , button
+                [ class "flex items-center justify-between mt-6 pl-2 pr-3 py-2 border rounded shadow-sm text-slate-900 bg-slate-100"
+                , type_ "button"
+                , attribute "aria-label" "Version"
+                ]
+                [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline" |> Octicons.tag
+                , span [ class "ml-2" ] [ text release.version ]
+
+                -- TODO: add a latest tag to the latest version
+                -- , span [ class "ml-2 text-slate-600" ] [ text "(latest)" ]
+                , Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline ml-3" |> Octicons.chevronDown
+                ]
+            ]
+        , File.defaultOptions
+            |> File.fileName "README"
+            |> File.contents release.readme
+            |> File.view
+        ]
