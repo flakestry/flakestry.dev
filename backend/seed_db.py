@@ -6,6 +6,7 @@ from flakestry.sql import (
     GitHubRepo,
     Release,
 )
+from flakestry.search import get_opensearch, opensearch_index
 
 # TODO: reuse /publish logic for this
 def main() -> None:
@@ -80,6 +81,23 @@ def main() -> None:
     session.add(home_manager_release)
 
     session.commit()
+
+    opensearch = get_opensearch()
+    opensearch.indices.delete(index=opensearch_index, ignore=[400, 404])
+
+    for release in [nixpkgs_release, home_manager_release]:
+        document = {
+            'description': release.repo.description,
+            'readme': release.readme,
+            'outputs': str(release.outputs),
+        }
+        opensearch.index(
+            index = opensearch_index,
+            body = document,
+            id = release.id,
+            refresh = True
+        )
+
 
 if __name__ == "__main__":
     main()
