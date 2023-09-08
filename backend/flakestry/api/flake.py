@@ -25,6 +25,7 @@ class FlakeRelease(FlakeReleaseCompact):
 
 class FlakesResponse(BaseModel):
     releases: List[FlakeReleaseCompact]
+    count: int
 
 class OwnerResponse(BaseModel):
     repos: List[FlakeReleaseCompact]
@@ -63,8 +64,7 @@ def get_flakes( session: Session = Depends(get_session)
         releases = session.exec(statement).all()
 
     releases = list(map(toFlakeReleaseCompact, releases))
-
-    return {"releases": releases}
+    return {"releases": releases, "count": len(releases)}
 
 @router.get("/flake/github/{owner}",
     response_model=OwnerResponse,

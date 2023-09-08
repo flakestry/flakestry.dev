@@ -109,28 +109,47 @@ view model =
                     , Search.view { onSearch = HandleSearch } model.searchState
 
                     -- , hr [ class "mt-36 border-t border-slate-200" ] []
-                    , if RemoteData.isSuccess model.searchState.searchResponse then
-                        div []
-                            [ h2 [ class "max-w-3xl flex items-center pt-12 text-xl text-slate-900 font-semibold" ]
-                                [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline h-5 w-5" |> Octicons.search
-                                , span [ class "ml-2" ] [ text "Search results" ]
-                                ]
-                            , viewFlakeResults model.searchState.searchResponse
-                            ]
-
-                      else
-                        div []
-                            [ h2 [ class "max-w-3xl flex items-center pt-12 text-xl text-slate-900 font-semibold" ]
-                                [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline h-5 w-5" |> Octicons.clock
-                                , span [ class "ml-2" ] [ text "Recently released flakes" ]
-                                ]
-                            , viewFlakeResults model.latestFlakesResponse
-                            ]
+                    , viewSearchResults model.latestFlakesResponse model.searchState
                     ]
                 ]
             , Flakestry.Layout.viewFooter
             ]
     }
+
+
+viewSearchResults : WebData Api.FlakesResponse -> Search.Model -> Html msg
+viewSearchResults latestFlakesResponse searchState =
+    if searchState.query == Nothing then
+        viewLatestFlakes latestFlakesResponse
+
+    else
+        case searchState.searchResponse of
+            RemoteData.NotAsked ->
+                viewLatestFlakes latestFlakesResponse
+
+            _ ->
+                div []
+                    [ h2 [ class "max-w-3xl flex items-center pt-12 text-xl text-slate-900 font-semibold" ]
+                        [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline h-5 w-5" |> Octicons.search
+                        , span [ class "ml-2" ] [ text "Search results" ]
+                        ]
+                    , p [ class "mt-2 text-sm text-slate-600" ]
+                        [ span [] [ text <| "Found " ++ String.fromInt (getSearchCount searchState.searchResponse) ++ " flakes that match " ]
+                        , span [ class "font-semibold" ] [ text <| Maybe.withDefault "" searchState.query ]
+                        ]
+                    , viewFlakeResults searchState.searchResponse
+                    ]
+
+
+viewLatestFlakes : WebData Api.FlakesResponse -> Html msg
+viewLatestFlakes latestFlakesResponse =
+    div []
+        [ h2 [ class "max-w-3xl flex items-center pt-12 text-xl text-slate-900 font-semibold" ]
+            [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline h-5 w-5" |> Octicons.clock
+            , span [ class "ml-2" ] [ text "Recently released flakes" ]
+            ]
+        , viewFlakeResults latestFlakesResponse
+        ]
 
 
 viewFlakeResults : WebData Api.FlakesResponse -> Html msg
@@ -140,7 +159,7 @@ viewFlakeResults response =
             let
                 viewFlakes =
                     if List.isEmpty flakes.releases then
-                        [ div [ class "mt-12" ] [ text "No flakes found" ] ]
+                        [ div [ class "mt-12" ] [] ]
 
                     else
                         List.map
@@ -161,3 +180,13 @@ viewFlakeResults response =
 
         _ ->
             div [ class "mt-12" ] [ text "Loading..." ]
+
+
+getSearchCount : WebData Api.FlakesResponse -> Int
+getSearchCount response =
+    case response of
+        RemoteData.Success flakes ->
+            flakes.count
+
+        _ ->
+            0
