@@ -123,13 +123,7 @@ view props model =
             , placeholder "Search for flakes..."
             , type_ "text"
             , name "search"
-            , onInput
-                (\query ->
-                    SetQuery query
-                        |> Debouncer.provideInput
-                        |> Debounce
-                        |> props.onSearch
-                )
+            , onInput (\query -> query |> SetQuery |> props.onSearch)
             ]
             []
         ]
