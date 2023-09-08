@@ -79,10 +79,8 @@
       --type-mappings object=JsonObject \
       --output ${config.devenv.root}/frontend/generated-api
 
-    root_path=$(cat ${config.devenv.root}/frontend/openapi.json | jq '.servers[0].url')
-
     # Replace cross-origin requests with requests to the same host
-    sed -i "s#Url.Builder.crossOrigin req.basePath req.pathParams#Url.Builder.absolute ($root_path :: req.pathParams)#g" \
+    sed -i "s#Url.Builder.crossOrigin req.basePath req.pathParams#Url.Builder.absolute (\"api\" :: req.pathParams)#g" \
       ${config.devenv.root}/frontend/generated-api/src/Api.elm
   '';
 
