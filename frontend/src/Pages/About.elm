@@ -10,8 +10,9 @@ page : View msg
 page =
     { title = "flakestry - Publish"
     , body =
-        [ Flakestry.Layout.viewNav
-        , main_ [] []
-        , Flakestry.Layout.viewFooter
-        ]
+        Flakestry.Layout.viewBody
+            [ Flakestry.Layout.viewNav
+            , main_ [] []
+            , Flakestry.Layout.viewFooter
+            ]
     }

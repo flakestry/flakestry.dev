@@ -77,19 +77,20 @@ view : String -> Model -> View Msg
 view org model =
     { title = org
     , body =
-        [ Flakestry.Layout.viewNav
-        , div [ class "container max-w-5xl px-4 min-h-100vh" ]
-            [ h2 [ class "inline-flex items-center font-semibold text-2xl py-16" ]
-                [ img [ class "inline h-7 w-7 rounded border border-slate-300", src ("https://github.com/" ++ org ++ ".png?size=128") ] []
-                , span [ class "ml-2" ] [ text org ]
+        Flakestry.Layout.viewBody
+            [ Flakestry.Layout.viewNav
+            , div [ class "container max-w-5xl px-4" ]
+                [ h2 [ class "inline-flex items-center font-semibold text-2xl py-16" ]
+                    [ img [ class "inline h-7 w-7 rounded border border-slate-300", src ("https://github.com/" ++ org ++ ".png?size=128") ] []
+                    , span [ class "ml-2" ] [ text org ]
+                    ]
+                , RemoteData.unwrap
+                    (div [] [])
+                    (\response -> response |> .repos |> viewRepoCard)
+                    model.ownerResponse
                 ]
-            , RemoteData.unwrap
-                (div [] [])
-                (\response -> response |> .repos |> viewRepoCard)
-                model.ownerResponse
+            , Flakestry.Layout.viewFooter
             ]
-        , Flakestry.Layout.viewFooter
-        ]
     }
 
 

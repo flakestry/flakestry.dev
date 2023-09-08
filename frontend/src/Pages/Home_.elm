@@ -96,39 +96,40 @@ view : Model -> View Msg
 view model =
     { title = "flakestry"
     , body =
-        [ Flakestry.Layout.viewNav
-        , {- Content -}
-          main_ []
-            [ div
-                [ class "container px-4 py-24 max-w-3xl" ]
-                [ h1
-                    [ class "text-4xl md:text-center font-semibold"
+        Flakestry.Layout.viewBody
+            [ Flakestry.Layout.viewNav
+            , {- Content -}
+              main_ []
+                [ div
+                    [ class "container px-4 py-24 max-w-3xl" ]
+                    [ h1
+                        [ class "text-4xl md:text-center font-semibold"
+                        ]
+                        [ text "Find, Install, and Publish ", a [ href "https://nix.dev/concepts/flakes/", class "text-blue-900 hover:text-sky-500" ] [ text "Nix Flakes" ], text "." ]
+                    , Search.view { onSearch = HandleSearch } model.searchState
+
+                    -- , hr [ class "mt-36 border-t border-slate-200" ] []
+                    , if RemoteData.isSuccess model.searchState.searchResponse then
+                        div []
+                            [ h2 [ class "max-w-3xl flex items-center pt-12 text-xl text-slate-900 font-semibold" ]
+                                [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline h-5 w-5" |> Octicons.search
+                                , span [ class "ml-2" ] [ text "Search results" ]
+                                ]
+                            , viewFlakeResults model.searchState.searchResponse
+                            ]
+
+                      else
+                        div []
+                            [ h2 [ class "max-w-3xl flex items-center pt-12 text-xl text-slate-900 font-semibold" ]
+                                [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline h-5 w-5" |> Octicons.clock
+                                , span [ class "ml-2" ] [ text "Recently released flakes" ]
+                                ]
+                            , viewFlakeResults model.latestFlakesResponse
+                            ]
                     ]
-                    [ text "Find, Install, and Publish ", a [ href "https://nix.dev/concepts/flakes/", class "text-blue-900 hover:text-sky-500" ] [ text "Nix Flakes" ], text "." ]
-                , Search.view { onSearch = HandleSearch } model.searchState
-
-                -- , hr [ class "mt-36 border-t border-slate-200" ] []
-                , if RemoteData.isSuccess model.searchState.searchResponse then
-                    div []
-                        [ h2 [ class "max-w-3xl flex items-center pt-12 text-xl text-slate-900 font-semibold" ]
-                            [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline h-5 w-5" |> Octicons.search
-                            , span [ class "ml-2" ] [ text "Search results" ]
-                            ]
-                        , viewFlakeResults model.searchState.searchResponse
-                        ]
-
-                  else
-                    div []
-                        [ h2 [ class "max-w-3xl flex items-center pt-12 text-xl text-slate-900 font-semibold" ]
-                            [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline h-5 w-5" |> Octicons.clock
-                            , span [ class "ml-2" ] [ text "Recently released flakes" ]
-                            ]
-                        , viewFlakeResults model.latestFlakesResponse
-                        ]
                 ]
+            , Flakestry.Layout.viewFooter
             ]
-        , Flakestry.Layout.viewFooter
-        ]
     }
 
 

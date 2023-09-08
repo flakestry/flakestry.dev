@@ -11,23 +11,24 @@ page : View msg
 page =
     { title = "flakestry - Publish"
     , body =
-        [ Flakestry.Layout.viewNav
-        , main_ []
-            [ div
-                [ class "container px-4 max-w-5xl" ]
-                [ h1
-                    [ class "py-24 text-4xl font-semibold md:text-center"
+        Flakestry.Layout.viewBody
+            [ Flakestry.Layout.viewNav
+            , main_ []
+                [ div
+                    [ class "container px-4 max-w-5xl" ]
+                    [ h1
+                        [ class "py-24 text-4xl font-semibold md:text-center"
+                        ]
+                        [ text "Publish your Flake for each tag" ]
+                    , File.defaultOptions
+                        |> File.fileName ".github/workflows/publish.yaml"
+                        |> File.contents publishFlakeMarkdown
+                        |> File.setCopyableContents (Just publishFlakeYaml)
+                        |> File.view
                     ]
-                    [ text "Publish your Flake for each tag" ]
-                , File.defaultOptions
-                    |> File.fileName ".github/workflows/publish.yaml"
-                    |> File.contents publishFlakeMarkdown
-                    |> File.setCopyableContents (Just publishFlakeYaml)
-                    |> File.view
                 ]
+            , Flakestry.Layout.viewFooter
             ]
-        , Flakestry.Layout.viewFooter
-        ]
     }
 
 

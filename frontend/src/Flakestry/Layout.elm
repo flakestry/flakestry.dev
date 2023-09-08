@@ -38,13 +38,21 @@ viewNav =
         ]
 
 
+viewBody : List (Html msg) -> List (Html msg)
+viewBody content =
+    [ div
+        [ class "min-h-screen flex flex-col" ]
+        content
+    ]
+
+
 viewFooter : Html msg
 viewFooter =
     footer
-        [ class "text-sm pb-16 mt-16 leading-6"
+        [ class "justify-self-end text-sm pb-16 mt-auto leading-6"
         ]
         [ div
-            [ class "container max-w-5xl px-4"
+            [ class "container max-w-5xl px-4 mt-16"
             ]
             [ hr [ class "flex border-t border-slate-200" ] []
             , div [ class "flex pt-12" ]

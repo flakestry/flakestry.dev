@@ -94,10 +94,11 @@ view model =
     in
     { title = title
     , body =
-        [ Flakestry.Layout.viewNav
-        , releaseBody
-        , Flakestry.Layout.viewFooter
-        ]
+        Flakestry.Layout.viewBody
+            [ Flakestry.Layout.viewNav
+            , releaseBody
+            , Flakestry.Layout.viewFooter
+            ]
     }
 
 
