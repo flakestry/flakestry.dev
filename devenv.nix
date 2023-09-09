@@ -1,10 +1,10 @@
 { config, pkgs, lib, ... }: {
   packages = [
     pkgs.postgresql
+    pkgs.openapi-generator-cli
   ] ++ lib.optionals (!config.container.isBuilding) [
     pkgs.flyctl
     pkgs.cloudflared
-    pkgs.openapi-generator-cli
     pkgs.nodePackages.pyright
   ];
 
@@ -44,6 +44,7 @@
   enterShell = ''
     export PATH="${config.devenv.root}/node_modules/.bin:$PATH"
   '' + lib.optionalString config.container.isBuilding ''
+    generate-elm-api
     cd ${config.devenv.root}frontend && elm-land build
   '';
 
