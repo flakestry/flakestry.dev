@@ -2,6 +2,7 @@
   packages = [
     pkgs.postgresql
     pkgs.openapi-generator-cli
+    pkgs.gnused
   ] ++ lib.optionals (!config.container.isBuilding) [
     pkgs.flyctl
     pkgs.cloudflared
