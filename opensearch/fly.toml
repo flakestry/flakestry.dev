@@ -1,0 +1,7 @@
+primary_region = "ams"
+
+[build]
+image = opensearchproject/opensearch:latest
+
+[env]
+discovery.type = single-node
