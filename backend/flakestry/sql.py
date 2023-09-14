@@ -73,7 +73,7 @@ if host:
     engine_url = f"postgresql+pg8000://{os.environ['USER']}@flakestry?unix_sock={host}/.s.PGSQL.5432"
 else:
     scheme, rest = os.environ['DATABASE_URL'].split("://")
-    engine_url = f"{scheme}+pg8000://{rest}"
+    engine_url = f"postgresql+pg8000://{rest}"
 
 engine = create_engine(engine_url)
 
