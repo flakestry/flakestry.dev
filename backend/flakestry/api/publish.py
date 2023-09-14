@@ -92,11 +92,18 @@ def publish(publish: Publish,
     ref_response.raise_for_status()
     commit = ref_response.json()['object']['sha']
  
+    # index README
+    try:
+        description = publish.metadata['description']
+    except Exception:
+        description = None
+
     release = Release(
         repo_id=repo.id,
         version=version,
         readme=publish.readme,
         commit=commit,
+        description=description,
         meta_data=publish.metadata,
         meta_data_errors=publish.metadata_errors,
         outputs=publish.outputs,
@@ -106,11 +113,6 @@ def publish(publish: Publish,
     session.commit()
     session.refresh(release)
 
-    # index README
-    try:
-        description = publish.metadata['description']
-    except Exception:
-        description = ''
 
     path = f"{owner_name}/{repository_name}/{commit}/{publish.readme}"
     readme_response = requests.get(

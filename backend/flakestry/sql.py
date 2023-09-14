@@ -52,6 +52,7 @@ class Release(SQLModel, table=True):
     readme: Optional[str]
     version: str
     commit: str
+    description: str | None
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
     )
