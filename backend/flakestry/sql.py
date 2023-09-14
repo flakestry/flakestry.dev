@@ -77,6 +77,8 @@ if host:
 else:
     scheme, rest = os.environ['DATABASE_URL'].split("://")
     engine_url = f"postgresql+pg8000://{rest}"
+    # needed for pg8000
+    engine_url = engine_url.replace("?sslmode=disable", "")
 
 logger.info(f"engine_url {engine_url}")
 engine = create_engine(engine_url)
