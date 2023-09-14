@@ -87,7 +87,7 @@
   '';
 
   processes = {
-    backend.exec = "cd ${config.devenv.root} && uvicorn --app-dir backend --reload flakestry.main:app";
+    backend.exec = "cd ${config.devenv.root} && uvicorn --app-dir backend ${lib.optionalString (!config.container.isBuilding) "--reload"} flakestry.main:app";
   } // lib.optionalAttrs (!config.container.isBuilding) {
     frontend.exec = "cd ${config.devenv.root}/frontend && elm-land server";
   };
