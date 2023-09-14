@@ -1,6 +1,7 @@
 from typing import Optional, List, Any
 import os
 from datetime import datetime
+import logging
 from sqlmodel import (
     Session,
     Field,
@@ -11,6 +12,8 @@ from sqlmodel import (
 )
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB
+
+logger = logging.getLogger("uvicorn")
 
 class GitHubOwner(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -75,6 +78,7 @@ else:
     scheme, rest = os.environ['DATABASE_URL'].split("://")
     engine_url = f"postgresql+pg8000://{rest}"
 
+logger.info(f"engine_url {engine_url}")
 engine = create_engine(engine_url)
 
 def create_db_and_tables():

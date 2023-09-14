@@ -100,6 +100,13 @@
     "x:\"$(${pkgs.flyctl}/bin/flyctl auth token)\""
   ];
 
+  scripts.deploy-staging.exec = ''
+    devenv container processes --copy
+    flyctl deploy --vm-memory 1024 -a flakestry-staging \
+      --image registry.fly.io/flakestry-staging:latest \
+      --env FLAKESTRY_URL=https://staging.flakestry.dev
+  '';
+
   pre-commit.hooks = {
     shellcheck.enable = true;
     #shellcheck.args = [ "--exclude=SC1090" ];
