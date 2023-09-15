@@ -1,7 +1,11 @@
 primary_region = "ams"
 
 [build]
-image = opensearchproject/opensearch:latest
+image = "opensearchproject/opensearch:latest"
 
 [env]
-discovery.type = single-node
+"discovery.type" = "single-node"
+
+[mounts]
+source="opensearch_storage"
+destination="/usr/share/opensearch/data"
