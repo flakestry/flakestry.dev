@@ -30,15 +30,18 @@
     extraConfig = ''
       root * ${config.devenv.root}/frontend/dist
 
-      handle_path /api/* {
-        reverse_proxy localhost:8000
-      }
+      route {
+        handle_path /api/* {
+          reverse_proxy localhost:8000
+        }
 
-      ${ if config.container.isBuilding then ''
-        file_server
-      '' else ''
-        reverse_proxy localhost:5200
-      ''}
+        ${ if config.container.isBuilding then ''
+          try_files {path} /
+          file_server
+        '' else ''
+          reverse_proxy localhost:5200
+        ''}
+      }
     '';
   };
 
