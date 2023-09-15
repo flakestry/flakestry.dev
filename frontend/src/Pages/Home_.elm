@@ -133,9 +133,10 @@ viewSearchResults latestFlakesResponse searchState =
                         [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline h-5 w-5" |> Octicons.search
                         , span [ class "ml-2" ] [ text "Search results" ]
                         ]
-                    , p [ class "mt-2 text-sm text-slate-600" ]
+                    , p [ class "mt-6 text-sm text-slate-600" ]
                         [ span [] [ text <| "Found " ++ String.fromInt (getSearchCount searchState.searchResponse) ++ " flakes that match " ]
                         , span [ class "font-semibold" ] [ text <| Maybe.withDefault "" searchState.query ]
+                        , text "."
                         ]
                     , viewFlakeResults searchState.searchResponse
                     ]
