@@ -98,10 +98,18 @@ def publish(publish: Publish,
     except Exception:
         description = None
 
+    path = f"{owner_name}/{repository_name}/{commit}/{publish.readme}"
+    readme_response = requests.get(
+        f"https://raw.githubusercontent.com/{path}",
+        headers=github_headers
+    )
+    readme_response.raise_for_status()
+
     release = Release(
         repo_id=repo.id,
         version=version,
-        readme=publish.readme,
+        readme_filename=publish.readme,
+        readme=readme_response.text,
         commit=commit,
         description=description,
         meta_data=publish.metadata,
@@ -113,13 +121,6 @@ def publish(publish: Publish,
     session.commit()
     session.refresh(release)
 
-
-    path = f"{owner_name}/{repository_name}/{commit}/{publish.readme}"
-    readme_response = requests.get(
-        f"https://raw.githubusercontent.com/{path}",
-        headers=github_headers
-    )
-    readme_response.raise_for_status()
 
     document = {
         'description': description,

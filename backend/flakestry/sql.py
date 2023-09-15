@@ -52,6 +52,7 @@ class Release(SQLModel, table=True):
         back_populates="releases",
         sa_relationship_kwargs={"lazy": "joined"})
 
+    readme_filename: Optional[str]
     readme: Optional[str]
     version: str
     commit: str
