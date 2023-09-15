@@ -104,7 +104,8 @@
     devenv container processes --copy
     flyctl deploy --vm-memory 1024 -a flakestry-staging \
       --image registry.fly.io/flakestry-staging:latest \
-      --env FLAKESTRY_URL=https://staging.flakestry.dev
+      --env FLAKESTRY_URL=https://staging.flakestry.dev \
+      --env OPENSEARCH_HOST=flakestry-staging-opensearch.internal
   '';
 
   pre-commit.hooks = {
