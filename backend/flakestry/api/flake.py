@@ -110,7 +110,7 @@ def toFlakeReleaseCompact(release: Release) -> FlakeReleaseCompact:
         owner=release.repo.owner.name,
         repo=release.repo.name,
         version=release.version,
-        description=release.repo.description or "",
+        description=release.description or "",
         created_at=release.created_at,
     )
 
@@ -118,7 +118,7 @@ def toFlakeRelease(release: Release) -> FlakeRelease:
     return FlakeRelease(
         owner=release.repo.owner.name,
         repo=release.repo.name,
-        description=release.repo.description or "",
+        description=release.description or "",
         version=release.version,
         commit=release.commit,
         created_at=release.created_at,
