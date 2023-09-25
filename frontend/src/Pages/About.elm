@@ -10,9 +10,11 @@ import View exposing (View)
 about : String
 about =
     """
-  Flakestry is [a open source Nix community project](https://github.com/flakestry/flakestry.dev)
-  with the goal to replace the existing [search.nixos.org/flakes](https://search.nixos.org/flakes) by making it easier to
-  release flakes.
+  Flakestry is [an open source project](https://github.com/flakestry/flakestry.dev)
+  with the goal of making it easier to publish and discover Flakes.
+
+  It is intended as a replacement for the existing [search.nixos.org/flakes](https://search.nixos.org/flakes).
+  We are fully committed to making Flakestry an official Nix project.
 
   Currently it's possible to publish flakes via [GitHub actions](/publish), but [other sources could be added](https://github.com/flakestry/flakestry.dev/issues/1) later on.
 
