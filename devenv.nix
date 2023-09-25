@@ -47,7 +47,6 @@
 
   enterShell = ''
     export PATH="${config.devenv.root}/node_modules/.bin:$PATH"
-    ls -la ${config.devenv.root}/frontend/dist
   '';
 
   scripts.fetch-openapi-templates.exec =
