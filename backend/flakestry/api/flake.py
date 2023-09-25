@@ -60,7 +60,7 @@ def get_flakes( session: Session = Depends(get_session)
         ids = [int(hit['_id']) for hit in response['hits']['hits']]
         releases = session.exec(select(Release).where(col(Release.id).in_(ids))).all()
     else:
-        statement = select(Release).order_by(col(Release.created_at)).limit(10)
+        statement = select(Release).order_by(Release.created_at.desc()).limit(10)
         releases = session.exec(statement).all()
 
     releases = list(map(toFlakeReleaseCompact, releases))
