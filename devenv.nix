@@ -1,11 +1,11 @@
 { config, pkgs, lib, ... }: {
   packages = [
     pkgs.postgresql
-    pkgs.openapi-generator-cli
     pkgs.gnused
   ] ++ lib.optionals (!config.container.isBuilding) [
     pkgs.flyctl
     pkgs.cloudflared
+    pkgs.openapi-generator-cli
     pkgs.nodePackages.pyright
   ];
 
@@ -47,9 +47,9 @@
 
   enterShell = ''
     export PATH="${config.devenv.root}/node_modules/.bin:$PATH"
-  '' + lib.optionalString config.container.isBuilding ''
-    generate-elm-api
-    cd ${config.devenv.root}frontend && elm-land build
+    ls -la ${config.devenv.root}/frontend/
+    echo dist:
+    ls -la ${config.devenv.root}/frontend/dist
   '';
 
   scripts.fetch-openapi-templates.exec =
@@ -104,11 +104,17 @@
   ];
 
   scripts.deploy-staging.exec = ''
+    export FLAKESTRY_URL=https://staging.flakestry.dev
+    export OPENSEARCH_HOST=flakestry-staging-opensearch.internal
+    generate-elm-api
+    pushd frontend
+    elm-land build
+    popd
     devenv container processes --copy
     flyctl deploy --vm-memory 1024 -a flakestry-staging \
       --image registry.fly.io/flakestry-staging:latest \
-      --env FLAKESTRY_URL=https://staging.flakestry.dev \
-      --env OPENSEARCH_HOST=flakestry-staging-opensearch.internal \
+      --env FLAKESTRY_URL=$FLAKESTRY_URL \
+      --env OPENSEARCH_HOST=$OPENSEARCH_HOST \
       --wait-timeout 200
   '';
 
