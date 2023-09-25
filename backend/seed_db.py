@@ -58,6 +58,7 @@ def main() -> None:
             repo=nixos_repo,
             version="23.05",
             readme=readme,
+            description="nixpkgs is official package collection",
             commit="123",
             meta_data={},
             meta_data_errors="",
