@@ -81,7 +81,6 @@ else:
     # needed for pg8000
     engine_url = engine_url.replace("?sslmode=disable", "")
 
-logger.info(f"engine_url {engine_url}")
 engine = create_engine(engine_url)
 
 def create_db_and_tables():

@@ -47,8 +47,6 @@
 
   enterShell = ''
     export PATH="${config.devenv.root}/node_modules/.bin:$PATH"
-    ls -la ${config.devenv.root}/frontend/
-    echo dist:
     ls -la ${config.devenv.root}/frontend/dist
   '';
 
