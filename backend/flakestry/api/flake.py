@@ -50,7 +50,11 @@ def get_flakes( session: Session = Depends(get_session)
                 'query': {
                     'multi_match': {
                         'query': q,
-                        'fields': ['description^2', 'readme', 'outputs']
+                        'fields': ['description^2',
+                                   'readme',
+                                  'outputs',
+                                  'repo', 
+                                  'owner']
                     }
                 }
             },
