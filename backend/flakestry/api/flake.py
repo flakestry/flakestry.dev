@@ -52,9 +52,9 @@ def get_flakes( session: Session = Depends(get_session)
                         'query': q,
                         'fields': ['description^2',
                                    'readme',
-                                  'outputs',
-                                  'repo', 
-                                  'owner']
+                                   'outputs',
+                                   'repo^2', 
+                                   'owner^2']
                     }
                 }
             },
