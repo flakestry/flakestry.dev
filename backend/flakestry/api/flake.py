@@ -31,7 +31,6 @@ class OwnerResponse(BaseModel):
     repos: List[FlakeReleaseCompact]
 
 class RepoResponse(BaseModel):
-    latest: FlakeRelease | None
     releases: List[FlakeRelease]
 
 router = APIRouter()
@@ -107,16 +106,11 @@ def read_repo( owner: str
     statement = select(Release).where(col(Release.repo_id) == github_repo.id)
     releases = session.exec(statement).all()
     releases = sort_releases(releases)
-    if releases:
-        latest = toFlakeRelease(releases[-1])
-    else:
-        latest = None
-    return { "releases": list(map(toFlakeRelease, releases)),
-             "latest": latest
+    return { "releases": list(map(toFlakeRelease, releases))
            }
 
 def sort_releases(releases):
-    return sorted(releases, key=lambda r: parse(r.version))
+    return sorted(releases, key=lambda r: parse(r.version), reverse=True)
 
 def toFlakeReleaseCompact(release: Release) -> FlakeReleaseCompact:
     return FlakeReleaseCompact(

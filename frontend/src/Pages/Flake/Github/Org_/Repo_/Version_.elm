@@ -13,6 +13,7 @@ import Api.Data as Api
 import Api.Request.Default as Api
 import Api.Time as ApiTime
 import Components.File as File
+import Dropdown
 import Effect exposing (Effect)
 import Flakestry.Layout
 import Html exposing (..)
@@ -30,7 +31,7 @@ import View exposing (View)
 page : Shared.Model -> Route { org : String, repo : String, version : String } -> Page Model Msg
 page _ route =
     Page.new
-        { init = init route.params.org route.params.repo route.params.version
+        { init = init route.params.org route.params.repo (Just route.params.version)
         , update = update
         , subscriptions = subscriptions
         , view = view
@@ -38,12 +39,18 @@ page _ route =
 
 
 type alias Model =
-    { repoResponse : WebData Api.RepoResponse }
+    { repoResponse : WebData Api.RepoResponse
+    , versionDropdownIsOpen : Bool
+    , version : Maybe String
+    }
 
 
-init : String -> String -> String -> () -> ( Model, Effect Msg )
+init : String -> String -> Maybe String -> () -> ( Model, Effect Msg )
 init org repo version _ =
-    ( { repoResponse = RemoteData.NotAsked }
+    ( { repoResponse = RemoteData.NotAsked
+      , versionDropdownIsOpen = False
+      , version = version
+      }
     , Effect.sendCmd <|
         Api.send HandleGetRepoResponse <|
             Api.readRepoFlakeGithubOwnerRepoGet org repo
@@ -56,6 +63,7 @@ init org repo version _ =
 
 type Msg
     = HandleGetRepoResponse (Result Http.Error Api.RepoResponse)
+    | ToggleVersionDropdown Bool
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
@@ -66,46 +74,97 @@ update msg model =
             , Effect.none
             )
 
+        ToggleVersionDropdown isOpen ->
+            ( { model | versionDropdownIsOpen = isOpen }
+            , Effect.none
+            )
+
 
 
 -- SUBSCRIPTIONS
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
+
+
+viewRemoteData : WebData a -> (a -> View Msg) -> View Msg
+viewRemoteData webdata viewData =
+    case webdata of
+        RemoteData.NotAsked ->
+            { title = "flakestry"
+            , body =
+                Flakestry.Layout.viewBody
+                    [ Flakestry.Layout.viewNav
+                    , Flakestry.Layout.viewFooter
+                    ]
+            }
+
+        RemoteData.Loading ->
+            { title = "flakestry - loading"
+            , body =
+                Flakestry.Layout.viewBody
+                    [ Flakestry.Layout.viewNav
+                    , text "loading ..."
+                    , Flakestry.Layout.viewFooter
+                    ]
+            }
+
+        RemoteData.Failure err ->
+            { title = "flakestry - failed"
+            , body =
+                Flakestry.Layout.viewBody
+                    [ Flakestry.Layout.viewNav
+                    , text "failure loading flakes"
+                    , Flakestry.Layout.viewFooter
+                    ]
+            }
+
+        RemoteData.Success a ->
+            viewData a
 
 
 view : Model -> View Msg
 view model =
-    let
-        latestRelease =
-            model.repoResponse |> RemoteData.toMaybe |> Maybe.andThen .latest
+    viewRemoteData model.repoResponse
+        (\repo ->
+            let
+                maybeRelease =
+                    case model.version of
+                        Nothing ->
+                            List.head repo.releases
 
-        title =
-            latestRelease
-                |> Maybe.map (\release -> "Flake " ++ release.owner ++ "/" ++ release.repo)
-                |> Maybe.withDefault ""
+                        Just version ->
+                            List.filter (\release -> release.version == version) repo.releases |> List.head
+            in
+            case maybeRelease of
+                Nothing ->
+                    { title = "Flakestry - 404"
+                    , body =
+                        Flakestry.Layout.viewBody
+                            [ Flakestry.Layout.viewNav
+                            , text "No such release exists."
+                            , Flakestry.Layout.viewFooter
+                            ]
+                    }
 
-        releaseBody =
-            latestRelease
-                |> Maybe.map viewRelease
-                |> Maybe.withDefault (div [] [])
-    in
-    { title = title
-    , body =
-        Flakestry.Layout.viewBody
-            [ Flakestry.Layout.viewNav
-            , releaseBody
-            , Flakestry.Layout.viewFooter
-            ]
-    }
+                Just release ->
+                    { title = "Flake " ++ release.owner ++ "/" ++ release.repo
+                    , body =
+                        Flakestry.Layout.viewBody
+                            [ Flakestry.Layout.viewNav
+                            , viewRelease model repo.releases release
+                            , Flakestry.Layout.viewFooter
+                            ]
+                    }
+        )
 
 
-viewRelease : Api.FlakeRelease -> Html Msg
-viewRelease release =
+viewRelease : Model -> List Api.FlakeRelease -> Api.FlakeRelease -> Html Msg
+viewRelease model releases release =
     div [ class "container max-w-5xl px-4" ]
-        [ div [ class "py-16 leading-6" ]
+        [ div [ class "pt-16 pb-8 leading-6" ]
             [ h2 [ class "inline-flex items-center font-semibold text-2xl" ]
                 [ img [ class "inline h-7 w-7 rounded border border-slate-300", src ("https://github.com/" ++ release.owner ++ ".png?size=128") ] []
                 , a
@@ -120,8 +179,8 @@ viewRelease release =
                     ]
                     [ text release.repo ]
                 ]
-            , p [ class "mt-3 text-lg" ] [ text release.description ]
-            , p [ class "mt-3 text-sm inline-flex items-center" ]
+            , viewVersionDropdown model releases release
+            , p [ class "mt-3 text-sm items-center" ]
                 [ Octicons.defaultOptions
                     |> Octicons.color "currentColor"
                     |> Octicons.class "inline"
@@ -131,18 +190,7 @@ viewRelease release =
                         ApiTime.dateTimeToString release.createdAt
                     ]
                 ]
-            , button
-                [ class "flex items-center justify-between mt-6 pl-2 pr-3 py-2 border rounded shadow-sm text-slate-900 bg-slate-100"
-                , type_ "button"
-                , attribute "aria-label" "Version"
-                ]
-                [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline" |> Octicons.tag
-                , span [ class "ml-2" ] [ text release.version ]
-
-                -- TODO: add a latest tag to the latest version
-                -- , span [ class "ml-2 text-slate-600" ] [ text "(latest)" ]
-                , Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline ml-3" |> Octicons.chevronDown
-                ]
+            , p [ class "mt-3 text-lg" ] [ text release.description ]
             ]
         , File.defaultOptions
             |> File.fileName "README"
@@ -150,3 +198,41 @@ viewRelease release =
             |> File.contents release.readme
             |> File.view
         ]
+
+
+viewVersionDropdown : Model -> List Api.FlakeRelease -> Api.FlakeRelease -> Html Msg
+viewVersionDropdown model releases release =
+    let
+        tag =
+            Octicons.defaultOptions
+                |> Octicons.color "currentColor"
+                |> Octicons.class "inline mr-2"
+                |> Octicons.tag
+
+        mkVersion =
+            \r -> a [ class "p-2 hover:underline hover:cursor-pointer" ] [ tag, text r.version ]
+    in
+    Dropdown.dropdown
+        { identifier = "version-dropdown"
+        , toggleEvent = Dropdown.OnClick
+        , drawerVisibleAttribute = class "visible"
+        , onToggle = ToggleVersionDropdown
+        , layout =
+            \{ toDropdown, toToggle, toDrawer } ->
+                toDropdown div
+                    [ class "ml-6" ]
+                    [ toToggle button
+                        [ class "flex items-center justify-between pl-2 pr-3 py-2 border rounded shadow-sm text-slate-900 bg-slate-100"
+                        , type_ "button"
+                        , attribute "aria-label" "Version"
+                        ]
+                        [ tag
+                        , text release.version
+                        , Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline ml-3" |> Octicons.chevronDown
+                        ]
+                    , toDrawer div
+                        [ class "grid grid-cols-1 items-center justify-between pl-2 pr-3 py-2 border rounded shadow-sm text-slate-900 bg-slate-100" ]
+                        (List.map mkVersion releases)
+                    ]
+        , isToggled = model.versionDropdownIsOpen
+        }
