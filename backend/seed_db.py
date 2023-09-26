@@ -54,6 +54,19 @@ def main() -> None:
     pwd = os.path.dirname(__file__)
     with open(os.path.join(pwd, "seed/nixpkgs-readme.md"), "r") as f:
         readme = f.read()
+        nixpkgs_release_22 = Release(
+            repo=nixos_repo,
+            version="22.05",
+            readme=readme,
+            description="nixpkgs is official package collection",
+            commit="566",
+            meta_data={},
+            meta_data_errors="",
+            outputs={},
+            outputs_errors="",
+        )
+    with open(os.path.join(pwd, "seed/nixpkgs-readme.md"), "r") as f:
+        readme = f.read()
         nixpkgs_release = Release(
             repo=nixos_repo,
             version="23.05",
@@ -65,6 +78,7 @@ def main() -> None:
             outputs={},
             outputs_errors="",
         )
+
     with open(os.path.join(pwd, "seed/home-manager-readme.md"), "r") as f:
         readme = f.read()
         home_manager_release = Release(
@@ -86,7 +100,7 @@ def main() -> None:
     opensearch = get_opensearch()
     opensearch.indices.delete(index=opensearch_index, ignore=[400, 404])
 
-    for release in [nixpkgs_release, home_manager_release]:
+    for release in [nixpkgs_release, nixpkgs_release_22, home_manager_release]:
         document = {
             'description': release.repo.description,
             'readme': release.readme,

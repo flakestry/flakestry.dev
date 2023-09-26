@@ -72,11 +72,21 @@ def get_flakes( session: Session = Depends(get_session)
         422: {"model": ValidationError},
     })
 def read_owner(owner: str, session: Session = Depends(get_session)):
-    q = select(Release).join(GitHubRepo).join(GitHubOwner)\
-            .where(GitHubOwner.name == owner)
+    # get all repos
+    q = select(GitHubRepo).join(GitHubOwner)\
+        .where(GitHubOwner.name == owner)\
+        .order_by(GitHubRepo.created_at.desc())
     repos = session.exec(q).all()
-    repo_response = map(toFlakeReleaseCompact, repos)
-    return {"repos": list(repo_response)}
+
+    # get latest versions for repos
+    releases = []
+    for repo in repos:
+        sorted_releases = sort_releases(repo.releases)
+        if sorted_releases:
+            releases.append(sorted_releases[-1])
+
+    releases_response = map(toFlakeReleaseCompact, releases)
+    return {"repos": list(releases_response)}
 
 @router.get("/flake/github/{owner}/{repo}",
     response_model=RepoResponse,
@@ -96,7 +106,7 @@ def read_repo( owner: str
     # get all releases for repo
     statement = select(Release).where(col(Release.repo_id) == github_repo.id)
     releases = session.exec(statement).all()
-    releases = sorted(releases, key=lambda r: parse(r.version))
+    releases = sort_releases(releases)
     if releases:
         latest = toFlakeRelease(releases[-1])
     else:
@@ -104,6 +114,9 @@ def read_repo( owner: str
     return { "releases": list(map(toFlakeRelease, releases)),
              "latest": latest
            }
+
+def sort_releases(releases):
+    return sorted(releases, key=lambda r: parse(r.version))
 
 def toFlakeReleaseCompact(release: Release) -> FlakeReleaseCompact:
     return FlakeReleaseCompact(
