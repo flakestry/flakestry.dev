@@ -210,7 +210,12 @@ viewVersionDropdown model releases release =
                 |> Octicons.tag
 
         mkVersion =
-            \r -> a [ class "p-2 hover:underline hover:cursor-pointer" ] [ tag, text r.version ]
+            \r ->
+                a
+                    [ class "p-2 hover:underline hover:cursor-pointer"
+                    , Route.Path.href (Route.Path.Flake_Github_Org__Repo__Version_ { org = r.owner, repo = r.repo, version = r.version })
+                    ]
+                    [ tag, text r.version ]
     in
     Dropdown.dropdown
         { identifier = "version-dropdown"
