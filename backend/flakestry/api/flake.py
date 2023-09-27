@@ -11,6 +11,7 @@ from flakestry.sql import GitHubOwner, GitHubRepo, Release, get_session
 from flakestry.error import ValidationError
 from flakestry.search import get_opensearch, opensearch_index
 
+
 # A compact subset of a FlakeRelease for use in search results
 class FlakeReleaseCompact(BaseModel):
     owner: str
@@ -19,48 +20,60 @@ class FlakeReleaseCompact(BaseModel):
     description: str
     created_at: datetime
 
+
 class FlakeRelease(FlakeReleaseCompact):
     commit: str
     readme: str
+
 
 class FlakesResponse(BaseModel):
     releases: List[FlakeReleaseCompact]
     count: int
 
+
 class OwnerResponse(BaseModel):
     repos: List[FlakeReleaseCompact]
+
 
 class RepoResponse(BaseModel):
     releases: List[FlakeRelease]
 
+
 router = APIRouter()
 
-@router.get("/flake",
+
+@router.get(
+    "/flake",
     response_model=FlakesResponse,
     responses={
         422: {"model": ValidationError},
-    })
-def get_flakes( session: Session = Depends(get_session)
-              , opensearch: OpenSearch = Depends(get_opensearch)
-              , q: Union[str, None] = None):
+    },
+)
+def get_flakes(
+    session: Session = Depends(get_session),
+    opensearch: OpenSearch = Depends(get_opensearch),
+    q: Union[str, None] = None,
+):
     if q:
         response = opensearch.search(
-            body = {
-                'size': 10,
-                'query': {
-                    'multi_match': {
-                        'query': q,
-                        'fields': ['description^2',
-                                   'readme',
-                                   'outputs',
-                                   'repo^2', 
-                                   'owner^2']
+            body={
+                "size": 10,
+                "query": {
+                    "multi_match": {
+                        "query": q,
+                        "fields": [
+                            "description^2",
+                            "readme",
+                            "outputs",
+                            "repo^2",
+                            "owner^2",
+                        ],
                     }
-                }
+                },
             },
-            index = opensearch_index
+            index=opensearch_index,
         )
-        ids = [int(hit['_id']) for hit in response['hits']['hits']]
+        ids = [int(hit["_id"]) for hit in response["hits"]["hits"]]
         releases = session.exec(select(Release).where(col(Release.id).in_(ids))).all()
     else:
         statement = select(Release).order_by(Release.created_at.desc()).limit(10)
@@ -69,16 +82,22 @@ def get_flakes( session: Session = Depends(get_session)
     releases = list(map(toFlakeReleaseCompact, releases))
     return {"releases": releases, "count": len(releases)}
 
-@router.get("/flake/github/{owner}",
+
+@router.get(
+    "/flake/github/{owner}",
     response_model=OwnerResponse,
     responses={
         422: {"model": ValidationError},
-    })
+    },
+)
 def read_owner(owner: str, session: Session = Depends(get_session)):
     # get all repos
-    q = select(GitHubRepo).join(GitHubOwner)\
-        .where(GitHubOwner.name == owner)\
+    q = (
+        select(GitHubRepo)
+        .join(GitHubOwner)
+        .where(GitHubOwner.name == owner)
         .order_by(GitHubRepo.created_at.desc())
+    )
     repos = session.exec(q).all()
 
     # get latest versions for repos
@@ -91,16 +110,21 @@ def read_owner(owner: str, session: Session = Depends(get_session)):
     releases_response = map(toFlakeReleaseCompact, releases)
     return {"repos": list(releases_response)}
 
-@router.get("/flake/github/{owner}/{repo}",
+
+@router.get(
+    "/flake/github/{owner}/{repo}",
     response_model=RepoResponse,
     responses={
         422: {"model": ValidationError},
-    })
-def read_repo( owner: str
-             , repo: str
-             , session: Session = Depends(get_session)):
-    statement = select(GitHubRepo).join(GitHubOwner)\
-        .where(GitHubOwner.name == owner).where(GitHubRepo.name == repo)
+    },
+)
+def read_repo(owner: str, repo: str, session: Session = Depends(get_session)):
+    statement = (
+        select(GitHubRepo)
+        .join(GitHubOwner)
+        .where(GitHubOwner.name == owner)
+        .where(GitHubRepo.name == repo)
+    )
     github_repo = session.exec(statement).first()
 
     if not github_repo:
@@ -110,11 +134,12 @@ def read_repo( owner: str
     statement = select(Release).where(col(Release.repo_id) == github_repo.id)
     releases = session.exec(statement).all()
     releases = sort_releases(releases)
-    return { "releases": list(map(toFlakeRelease, releases))
-           }
+    return {"releases": list(map(toFlakeRelease, releases))}
+
 
 def sort_releases(releases):
     return sorted(releases, key=lambda r: parse(r.version), reverse=True)
+
 
 def toFlakeReleaseCompact(release: Release) -> FlakeReleaseCompact:
     return FlakeReleaseCompact(
@@ -125,6 +150,7 @@ def toFlakeReleaseCompact(release: Release) -> FlakeReleaseCompact:
         created_at=release.created_at,
     )
 
+
 def toFlakeRelease(release: Release) -> FlakeRelease:
     return FlakeRelease(
         owner=release.repo.owner.name,
@@ -133,5 +159,5 @@ def toFlakeRelease(release: Release) -> FlakeRelease:
         version=release.version,
         commit=release.commit,
         created_at=release.created_at,
-        readme=release.readme or ""
+        readme=release.readme or "",
     )

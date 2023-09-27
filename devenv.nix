@@ -120,6 +120,9 @@
     #shellcheck.args = [ "--exclude=SC1090" ];
     nixpkgs-fmt.enable = true;
     ruff.enable = true;
+    # Format with black until ruff gains auto-formatting capabilities
+    # https://github.com/astral-sh/ruff/issues/1904
+    black.enable = true;
     elm-format.enable = true;
   };
 }
