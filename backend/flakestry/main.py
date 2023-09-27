@@ -24,23 +24,26 @@ app = FastAPI(
     root_path="/api",
     # TODO: replace with actual URL from env/settings
     servers=[
-        { "url": "api" },
+        {"url": "api"},
     ],
 )
 
 # Override the default OpenAPI version.
 # openapi-generator does not currently support 3.1.0.
-app.openapi_version="3.0.0"
+app.openapi_version = "3.0.0"
+
 
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
+
 
 # TODO: make the routes more visible from a glance
 app.include_router(flakestry.api.publish.router)
 app.include_router(flakestry.api.flake.router)
 
 FastAPIInstrumentor.instrument_app(app)
+
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(
@@ -51,4 +54,3 @@ async def validation_exception_handler(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=jsonable_encoder({"detail": exc.errors(), "body": exc.body}),
     )
-

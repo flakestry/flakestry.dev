@@ -8,6 +8,7 @@ from flakestry.sql import (
 )
 from flakestry.search import get_opensearch, opensearch_index
 
+
 # TODO: reuse /publish logic for this
 def main() -> None:
     session = next(get_session())
@@ -102,18 +103,14 @@ def main() -> None:
 
     for release in [nixpkgs_release, nixpkgs_release_22, home_manager_release]:
         document = {
-            'description': release.repo.description,
-            'readme': release.readme,
-            'outputs': str(release.outputs),
+            "description": release.repo.description,
+            "readme": release.readme,
+            "outputs": str(release.outputs),
         }
         opensearch.index(
-            index = opensearch_index,
-            body = document,
-            id = release.id,
-            refresh = True
+            index=opensearch_index, body=document, id=release.id, refresh=True
         )
 
 
 if __name__ == "__main__":
     main()
-
