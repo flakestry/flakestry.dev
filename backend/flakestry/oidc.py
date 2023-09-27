@@ -1,9 +1,13 @@
 import os
+import logging
 from fastapi_oidc import get_auth
 from typing import Callable
 
+logger = logging.getLogger("uvicorn")
+
 # TODO: use pydantic_settings: fails to compile pyyaml
-oidc_audience = os.environ.get("FLAKESTRY_URL", "http://localhost:8000")
+oidc_audience = os.environ.get('FLAKESTRY_URL', 'http://localhost:8000')
+logger.info(f"oidc_audience: {oidc_audience}")
 oidc_client_id = os.environ.get("OIDC_CLIENT_ID", "6779ef20e75817b79602")
 oidc_issuer = os.environ.get(
     "OIDC_ISSUER", "https://token.actions.githubusercontent.com"
