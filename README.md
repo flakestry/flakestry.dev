@@ -4,6 +4,8 @@ A public registry of Nix flakes aiming to supercede [search.nixos.org](https://s
 
 Built using [elm.land](https://elm.land/) and [FastAPI](https://fastapi.tiangolo.com/).
 
+Maintainers: [@domenkozar](https://github.com/domenkozar).
+
 ## Development
 
 1. [Install direnv](https://direnv.net/docs/installation.html)
