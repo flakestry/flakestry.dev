@@ -3,7 +3,6 @@ module Pages.About exposing (..)
 import Flakestry.Layout
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Markdown
 import View exposing (View)
 
 
@@ -31,7 +30,14 @@ page =
     , body =
         Flakestry.Layout.viewBody
             [ Flakestry.Layout.viewNav
-            , main_ [] [ Markdown.toHtml [ class "container px-4 py-24 max-w-3xl prose" ] about ]
+            , main_ []
+                [ Html.node "highlight-code"
+                    [ class "container px-4 py-24 max-w-3xl prose"
+                    , attribute "code" about
+                    , attribute "language" "markdown"
+                    ]
+                    []
+                ]
             , Flakestry.Layout.viewFooter
             ]
     }

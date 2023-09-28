@@ -19,11 +19,9 @@
       "link": [
         { "rel": "stylesheet", "href": "https://rsms.me/inter/inter.css" },
         { "rel": "stylesheet", "href": "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css"},
-        { "rel": "icon", "type": "image/x-icon", "href": "/logo.png" }    
+        { "rel": "icon", "type": "image/x-icon", "href": "/logo.png" }
       ],
-      "script": [
-        { "src": "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"}
-      ]
+      "script": []
     },
     "router": {
       "useHashRouting": false

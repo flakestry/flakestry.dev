@@ -1,7 +1,11 @@
 {
   "name": "flakestry",
   "dependencies": {
-    "clipboard": "^2.0.11"
+    "clipboard": "^2.0.11",
+    "dompurify": "^3.0.6",
+    "highlight.js": "^11.8.0",
+    "marked": "^9.0.3",
+    "marked-highlight": "^2.0.6"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.3",

@@ -22,7 +22,8 @@ page =
                         [ text "Publish your Flake for each tag" ]
                     , File.defaultOptions
                         |> File.fileName ".github/workflows/publish.yaml"
-                        |> File.contents publishFlakeMarkdown
+                        |> File.language "yaml"
+                        |> File.contents publishFlakeYaml
                         |> File.setCopyableContents (Just publishFlakeYaml)
                         |> File.view
                     ]
@@ -30,11 +31,6 @@ page =
             , Flakestry.Layout.viewFooter
             ]
     }
-
-
-publishFlakeMarkdown : String
-publishFlakeMarkdown =
-    "```yaml\n" ++ publishFlakeYaml ++ "\n```"
 
 
 publishFlakeYaml : String
@@ -61,4 +57,4 @@ jobs:
             - uses: flakestry/flakestry-publish@main
               with:
                 version: "${{ inputs.tag || github.ref_name }}"
-    """
+"""

@@ -2,7 +2,6 @@ module Components.File exposing (..)
 
 import Html exposing (..)
 import Html.Attributes as HA
-import Markdown
 import Octicons
 
 
@@ -10,6 +9,7 @@ type alias Options =
     { fileName : String
     , contents : String
     , class_ : String
+    , language : String
     , copyableContents : Maybe String
     }
 
@@ -19,6 +19,7 @@ defaultOptions =
     { fileName = ""
     , contents = ""
     , class_ = ""
+    , language = "markdown"
     , copyableContents = Nothing
     }
 
@@ -36,6 +37,11 @@ contents value options =
 class : String -> Options -> Options
 class value options =
     { options | class_ = value }
+
+
+language : String -> Options -> Options
+language value options =
+    { options | language = value }
 
 
 setCopyableContents : Maybe String -> Options -> Options
@@ -69,14 +75,10 @@ view options =
                             )
                         |> Maybe.withDefault []
                    )
-        , Markdown.toHtmlWith readmeOptions [ HA.class <| String.join " " [ "px-8 py-8 overflow-x-scroll", options.class_ ] ] options.contents
+        , Html.node "highlight-code"
+            [ HA.class <| String.join " " [ "px-8 py-8 overflow-x-scroll", options.class_ ]
+            , HA.attribute "code" options.contents
+            , HA.attribute "language" options.language
+            ]
+            []
         ]
-
-
-readmeOptions : Markdown.Options
-readmeOptions =
-    let
-        defaults =
-            Markdown.defaultOptions
-    in
-    { defaults | sanitize = False }
