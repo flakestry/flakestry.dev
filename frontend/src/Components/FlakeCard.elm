@@ -26,7 +26,7 @@ view card =
             [ div []
                 [ div [ class "inline-flex items-center flex-wrap" ]
                     [ span [ class "inline-flex items-center mr-4" ]
-                        [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline" |> Octicons.markGithub
+                        [ img [ src ("https://github.com/" ++ card.username ++ ".png?size=16") ] []
                         , h3 [ class "ml-2 font-semibold truncate" ]
                             [ span [] [ text card.username ]
                             , span [ class "mx-1" ] [ text "/" ]
