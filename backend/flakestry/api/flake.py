@@ -73,8 +73,18 @@ def get_flakes(
             },
             index=opensearch_index,
         )
-        ids = [int(hit["_id"]) for hit in response["hits"]["hits"]]
-        releases = session.exec(select(Release).where(col(Release.id).in_(ids))).all()
+
+        # A map of release ids to search scores
+        hits = dict(
+            [(int(hit["_id"]), hit["_score"]) for hit in response["hits"]["hits"]]
+        )
+
+        releases = session.exec(
+            select(Release).where(col(Release.id).in_(hits.keys()))
+        ).all()
+        # Sort the releases by their search score
+        releases.sort(key=lambda r: hits[r.id], reverse=True)
+
     else:
         statement = select(Release).order_by(Release.created_at.desc()).limit(10)
         releases = session.exec(statement).all()
