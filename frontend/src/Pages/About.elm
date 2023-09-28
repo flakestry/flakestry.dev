@@ -34,7 +34,7 @@ page =
                 [ Html.node "code-content"
                     [ class "container px-4 py-24 max-w-3xl prose"
                     , attribute "code" about
-                    , attribute "lang" "markdown"
+                    , attribute "language" "markdown"
                     ]
                     []
                 ]

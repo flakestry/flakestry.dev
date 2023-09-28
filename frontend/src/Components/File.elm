@@ -78,7 +78,7 @@ view options =
         , Html.node "code-content"
             [ HA.class <| String.join " " [ "px-8 py-8 overflow-x-scroll", options.class_ ]
             , HA.attribute "code" options.contents
-            , HA.attribute "lang" options.language
+            , HA.attribute "language" options.language
             ]
             []
         ]

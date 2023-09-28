@@ -10,11 +10,11 @@ window.customElements.define('code-content', class extends HTMLElement {
 
   attributeChangedCallback() { this.render(); };
 
-  static get observedAttributes() { return ['code', 'lang']; };
+  static get observedAttributes() { return ['code', 'language']; };
 
   render() {
     const code = this.getAttribute('code');
-    const lang = this.getAttribute('lang') ?? 'markdown';
+    const lang = this.getAttribute('language') ?? 'markdown';
 
     switch (lang) {
       case 'markdown':
