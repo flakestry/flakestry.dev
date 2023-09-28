@@ -5,10 +5,16 @@ import Html.Attributes as HA
 import Octicons
 
 
+type FileType
+    = Markdown
+    | Code String
+
+
 type alias Options =
     { fileName : String
     , contents : String
     , class_ : String
+    , fileType : FileType
     , copyableContents : Maybe String
     }
 
@@ -18,6 +24,7 @@ defaultOptions =
     { fileName = ""
     , contents = ""
     , class_ = ""
+    , fileType = Markdown
     , copyableContents = Nothing
     }
 
@@ -35,6 +42,11 @@ contents value options =
 class : String -> Options -> Options
 class value options =
     { options | class_ = value }
+
+
+fileType : FileType -> Options -> Options
+fileType value options =
+    { options | fileType = value }
 
 
 setCopyableContents : Maybe String -> Options -> Options
@@ -68,11 +80,21 @@ view options =
                             )
                         |> Maybe.withDefault []
                    )
-        , Html.node "markdown-content"
-            [ HA.class <|
-                String.join " "
-                    [ "px-8 py-8 overflow-x-scroll", options.class_ ]
-            , HA.attribute "markdown" options.contents
-            ]
-            []
+        , case options.fileType of
+            Markdown ->
+                Html.node "markdown-content"
+                    [ HA.class <| String.join " " [ "px-8 py-8 overflow-x-scroll", options.class_ ]
+                    , HA.attribute "markdown" options.contents
+                    ]
+                    []
+
+            Code lang ->
+                Html.node "code-content"
+                    [ HA.class <|
+                        String.join " "
+                            [ "px-8 py-8 overflow-x-scroll", options.class_ ]
+                    , HA.attribute "code" options.contents
+                    , HA.attribute "lang" lang
+                    ]
+                    []
         ]
