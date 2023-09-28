@@ -75,7 +75,7 @@ view options =
                             )
                         |> Maybe.withDefault []
                    )
-        , Html.node "code-content"
+        , Html.node "highlight-code"
             [ HA.class <| String.join " " [ "px-8 py-8 overflow-x-scroll", options.class_ ]
             , HA.attribute "code" options.contents
             , HA.attribute "language" options.language

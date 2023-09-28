@@ -31,7 +31,7 @@ page =
         Flakestry.Layout.viewBody
             [ Flakestry.Layout.viewNav
             , main_ []
-                [ Html.node "code-content"
+                [ Html.node "highlight-code"
                     [ class "container px-4 py-24 max-w-3xl prose"
                     , attribute "code" about
                     , attribute "language" "markdown"

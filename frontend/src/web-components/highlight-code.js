@@ -3,7 +3,7 @@ import { markedHighlight } from 'marked-highlight';
 import DOMPurify from 'dompurify';
 import hljs from 'highlight.js';
 
-window.customElements.define('code-content', class extends HTMLElement {
+window.customElements.define('highlight-code', class extends HTMLElement {
   constructor() { super(); }
 
   connectedCallback() { this.render(); }
