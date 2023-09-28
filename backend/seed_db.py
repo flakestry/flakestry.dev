@@ -106,6 +106,8 @@ def main() -> None:
             "description": release.repo.description,
             "readme": release.readme,
             "outputs": str(release.outputs),
+            "repo": release.repo.name,
+            "owner": release.repo.owner.name,
         }
         opensearch.index(
             index=opensearch_index, body=document, id=release.id, refresh=True
