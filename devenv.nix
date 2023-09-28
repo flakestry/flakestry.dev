@@ -1,4 +1,31 @@
-{ config, pkgs, lib, ... }: {
+{ config, pkgs, lib, ... }:
+let
+  mkContainer = env: {
+    name = "flakestry-${env}";
+    registry = "docker://registry.fly.io/";
+    defaultCopyArgs = [
+      "--dest-creds"
+      "x:\"$(${pkgs.flyctl}/bin/flyctl auth token)\""
+    ];
+    # start processses
+    startupCommand = config.procfileScript;
+  };
+
+  mkDeploy = env: ''
+    export OPENSEARCH_HOST=flakestry-${env}-opensearch.internal
+    generate-elm-api
+    pushd frontend
+    elm-land build
+    popd
+    devenv container processes --copy
+    flyctl deploy --vm-memory 1024 -a flakestry-${env} \
+      --image registry.fly.io/flakestry-${env}:latest \
+      --env FLAKESTRY_URL=$FLAKESTRY_URL \
+      --env OPENSEARCH_HOST=$OPENSEARCH_HOST \
+      --wait-timeout 200
+  '';
+in
+{
   packages = [
     pkgs.postgresql
     pkgs.gnused
@@ -9,6 +36,7 @@
     pkgs.nodePackages.pyright
   ];
 
+  # https://github.com/cachix/devenv/pull/745
   env.LD_LIBRARY_PATH = "";
 
   languages.python = {
@@ -45,6 +73,7 @@
     '';
   };
 
+  # TODO: add this to javascript.npm implementation
   enterShell = ''
     export PATH="${config.devenv.root}/node_modules/.bin:$PATH"
   '';
@@ -92,27 +121,16 @@
     frontend.exec = "cd ${config.devenv.root}/frontend && elm-land server";
   };
 
-  # TODO: make --name an option
-  containers.processes.name = "flakestry-staging";
-  containers.processes.registry = "docker://registry.fly.io/";
-  containers.processes.defaultCopyArgs = [
-    "--dest-creds"
-    "x:\"$(${pkgs.flyctl}/bin/flyctl auth token)\""
-  ];
+  containers.staging = mkContainer "staging";
+  containers.production = mkContainer "production";
 
   scripts.deploy-staging.exec = ''
     export FLAKESTRY_URL=https://staging.flakestry.dev
-    export OPENSEARCH_HOST=flakestry-staging-opensearch.internal
-    generate-elm-api
-    pushd frontend
-    elm-land build
-    popd
-    devenv container processes --copy
-    flyctl deploy --vm-memory 1024 -a flakestry-staging \
-      --image registry.fly.io/flakestry-staging:latest \
-      --env FLAKESTRY_URL=$FLAKESTRY_URL \
-      --env OPENSEARCH_HOST=$OPENSEARCH_HOST \
-      --wait-timeout 300
+    ${mkDeploy "staging"}
+  '';
+  scripts.deploy-production.exec = ''
+    export FLAKESTRY_URL=https://flakestry.dev
+    ${mkDeploy "production"}
   '';
 
   pre-commit.hooks = {
