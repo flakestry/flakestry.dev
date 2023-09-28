@@ -22,8 +22,8 @@ page =
                         [ text "Publish your Flake for each tag" ]
                     , File.defaultOptions
                         |> File.fileName ".github/workflows/publish.yaml"
+                        |> File.language "yaml"
                         |> File.contents publishFlakeYaml
-                        |> File.fileType (File.Code "yaml")
                         |> File.setCopyableContents (Just publishFlakeYaml)
                         |> File.view
                     ]
