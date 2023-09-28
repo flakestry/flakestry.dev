@@ -2,7 +2,6 @@ module Components.File exposing (..)
 
 import Html exposing (..)
 import Html.Attributes as HA
-import Markdown
 import Octicons
 
 
@@ -69,14 +68,11 @@ view options =
                             )
                         |> Maybe.withDefault []
                    )
-        , Markdown.toHtmlWith readmeOptions [ HA.class <| String.join " " [ "px-8 py-8 overflow-x-scroll", options.class_ ] ] options.contents
+        , Html.node "markdown-content"
+            [ HA.class <|
+                String.join " "
+                    [ "px-8 py-8 overflow-x-scroll", options.class_ ]
+            , HA.attribute "markdown" options.contents
+            ]
+            []
         ]
-
-
-readmeOptions : Markdown.Options
-readmeOptions =
-    let
-        defaults =
-            Markdown.defaultOptions
-    in
-    { defaults | sanitize = False }

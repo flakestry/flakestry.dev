@@ -1,6 +1,7 @@
 import Clipboard from 'clipboard';
 
 import './index.css';
+import './web-components/markdown-content';
 
 // This is called BEFORE your Elm app starts up
 // 

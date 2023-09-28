@@ -15,8 +15,6 @@ import Page exposing (Page)
 import RemoteData exposing (WebData)
 import Route exposing (Route)
 import Shared
-import Svg
-import Svg.Attributes as SvgAttr
 import View exposing (View)
 
 
