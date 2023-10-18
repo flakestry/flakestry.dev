@@ -17,7 +17,7 @@ let
     pushd frontend
     elm-land build
     popd
-    devenv container processes --copy
+    devenv container ${env} --copy
     flyctl deploy --vm-memory 1024 -a flakestry-${env} \
       --image registry.fly.io/flakestry-${env}:latest \
       --env FLAKESTRY_URL=$FLAKESTRY_URL \
