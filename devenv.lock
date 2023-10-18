@@ -3,16 +3,17 @@
     "devenv": {
       "locked": {
         "dir": "src/modules",
-        "lastModified": 1694097209,
-        "narHash": "sha256-gQmBjjxeSyySjbh0yQVBKApo2KWIFqqbRUvG+Fa+QpM=",
+        "lastModified": 1697626249,
+        "narHash": "sha256-6C1gPjcb+A8NhJfNSjZ8hM7VFWLbHsUIjwMkVZfxgtw=",
         "owner": "cachix",
         "repo": "devenv",
-        "rev": "7a8e6a91510efe89d8dcb8e43233f93e86f6b189",
+        "rev": "191f30b23fc6ba805e6e19b930abf4fdfa6032e7",
         "type": "github"
       },
       "original": {
         "dir": "src/modules",
         "owner": "cachix",
+        "ref": "debug/flakestry-deploy",
         "repo": "devenv",
         "type": "github"
       }
