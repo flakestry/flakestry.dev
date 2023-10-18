@@ -43,6 +43,7 @@ in
     enable = true;
     poetry.enable = true;
     poetry.install.arguments = [ "--no-root" "--verbose" ];
+    venv.enable = false;
   };
 
   languages.javascript = {
