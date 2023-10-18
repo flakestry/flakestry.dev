@@ -78,6 +78,10 @@ in
   # TODO: add this to javascript.npm implementation
   enterShell = ''
     export PATH="${config.devenv.root}/node_modules/.bin:$PATH"
+    poetry config --list
+    poetry env info
+    printenv
+    cat .venv/bin/activate
   '';
 
   scripts.fetch-openapi-templates.exec =
