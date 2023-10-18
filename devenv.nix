@@ -42,6 +42,7 @@ in
   languages.python = {
     enable = true;
     poetry.enable = true;
+    poetry.install.arguments = [ "--no-root" "--verbose" ];
   };
 
   languages.javascript = {
