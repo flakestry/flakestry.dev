@@ -82,6 +82,8 @@ in
     poetry env info
     printenv
     cat .venv/bin/activate
+    rm -rf $(poetry env info -p)
+    poetry install --no-interaction
   '';
 
   scripts.fetch-openapi-templates.exec =
