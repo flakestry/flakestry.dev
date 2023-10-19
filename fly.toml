@@ -17,8 +17,8 @@ handlers = ["tls", "http"]
 port = "443"
 
 [[services.http_checks]]
-interval = 10000
-grace_period = "5s"
+interval = "30s"
+grace_period = "60s"
 method = "get"
 path = "/"
 protocol = "http"
