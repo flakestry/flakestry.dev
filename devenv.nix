@@ -7,6 +7,12 @@ let
       "--dest-creds"
       "x:\"$(${pkgs.flyctl}/bin/flyctl auth token)\""
     ];
+
+    copyToRoot =
+      builtins.filterSource
+        (path: type: baseNameOf path != ".venv")
+        ./.;
+
     # start processses
     startupCommand = config.procfileScript;
   };
@@ -38,14 +44,12 @@ in
 
   # https://github.com/cachix/devenv/pull/745
   env.LD_LIBRARY_PATH = "";
-  env.POETRY_VIRTUALENVS_OPTIONS_ALWAYS_COPY = true;
-  env.POETRY_VIRTUALENVS_CREATE = pkgs.lib.mkForce "false";
+  # env.POETRY_VIRTUALENVS_OPTIONS_ALWAYS_COPY = true;
+  # env.POETRY_VIRTUALENVS_CREATE = pkgs.lib.mkForce "false";
 
   languages.python = {
     enable = true;
     poetry.enable = true;
-    poetry.install.arguments = [ "-vvv" ];
-    poetry.activate.enable = false;
   };
 
   languages.javascript = {
@@ -87,10 +91,10 @@ in
     # rm -rf "$DEVENV_ROOT"/.venv
     # poetry install --no-interaction --no-root --verbose
   '' + ''
-    cat "$DEVENV_ROOT"/.venv/bin/activate
-    source "$DEVENV_ROOT"/.venv/bin/activate
+    # cat "$DEVENV_ROOT"/.venv/bin/activate
+    # source "$DEVENV_ROOT"/.venv/bin/activate
     printenv
-    ls -la "$DEVENV_ROOT"/.venv/bin
+    # ls -la "$DEVENV_ROOT"/.venv/bin
     poetry env info
   '';
 
