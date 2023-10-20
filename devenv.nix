@@ -104,7 +104,7 @@ in
         owner = "OpenAPITools";
         repo = "openapi-generator";
         rev = "v${pkgs.openapi-generator-cli.version}";
-        hash = "sha256-JKeNz+buV9lD6t1a/woiafmeS6T/v+e6xZeACn5FtZM=";
+        hash = "sha256-nAc/iU31ccNoZAQdrdAnBtNPBTgCStDpiqrC1DC4d6E=";
       };
     in
     ''

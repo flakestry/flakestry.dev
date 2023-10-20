@@ -1,4 +1,6 @@
 inputs:
+  nixpkgs:
+    url: github:NixOS/nixpkgs/nixos-unstable
   nix2container:
     url: github:nlewo/nix2container
     inputs:
@@ -8,3 +10,6 @@ inputs:
     url: github:rrbutani/nix-mk-shell-bin
   devenv:
     url: github:cachix/devenv?dir=src/modules
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
