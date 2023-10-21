@@ -5,7 +5,7 @@ primary_region = "ams"
 
 [http_service]
   internal_port = 8888
-  force_https = true
+  force_https = false
 
 [[http_service.checks]]
   grace_period = "10s"
