@@ -9,7 +9,7 @@ inputs:
   mk-shell-bin:
     url: github:rrbutani/nix-mk-shell-bin
   devenv:
-    url: github:cachix/devenv?dir=src/modules
+    url: github:/cachix/devenv/debug/flakestry-deploy?dir=src/modules
     inputs:
       nixpkgs:
         follows: nixpkgs

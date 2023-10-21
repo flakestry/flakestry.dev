@@ -8,6 +8,12 @@ let
       "x:\"$(${pkgs.flyctl}/bin/flyctl auth token)\""
     ];
 
+    config = {
+      ExposedPorts = {
+        "8888/tcp" = { };
+      };
+    };
+
     copyToRoot =
       builtins.filterSource
         (path: type: baseNameOf path != ".venv")
