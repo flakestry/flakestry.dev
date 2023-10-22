@@ -7,6 +7,12 @@ let
       "--dest-creds"
       "x:\"$(${pkgs.flyctl}/bin/flyctl auth token)\""
     ];
+    # Avoid copying the poetry virtual environment.
+    # This is not portable and should be built in the container.
+    copyToRoot =
+      builtins.filterSource
+        (path: type: baseNameOf path != ".venv")
+        ./.;
     # start processses
     startupCommand = config.procfileScript;
   };
@@ -17,12 +23,12 @@ let
     pushd frontend
     elm-land build
     popd
-    devenv container processes --copy
+    devenv container ${env} --copy
     flyctl deploy --vm-memory 1024 -a flakestry-${env} \
       --image registry.fly.io/flakestry-${env}:latest \
       --env FLAKESTRY_URL=$FLAKESTRY_URL \
       --env OPENSEARCH_HOST=$OPENSEARCH_HOST \
-      --wait-timeout 200
+      --wait-timeout 300
   '';
 in
 {
@@ -84,7 +90,7 @@ in
         owner = "OpenAPITools";
         repo = "openapi-generator";
         rev = "v${pkgs.openapi-generator-cli.version}";
-        hash = "sha256-JKeNz+buV9lD6t1a/woiafmeS6T/v+e6xZeACn5FtZM=";
+        hash = "sha256-nAc/iU31ccNoZAQdrdAnBtNPBTgCStDpiqrC1DC4d6E=";
       };
     in
     ''
