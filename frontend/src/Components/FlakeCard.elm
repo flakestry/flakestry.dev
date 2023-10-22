@@ -26,7 +26,7 @@ view card =
             [ div []
                 [ div [ class "inline-flex items-center flex-wrap" ]
                     [ span [ class "inline-flex items-center mr-4" ]
-                        [ img [ src ("https://github.com/" ++ card.username ++ ".png?size=16") ] []
+                        [ img [ class "inline h-5 w-5 rounded border border-slate-300", src ("https://github.com/" ++ card.username ++ ".png?size=32") ] []
                         , h3 [ class "ml-2 font-semibold truncate" ]
                             [ span [] [ text card.username ]
                             , span [ class "mx-1" ] [ text "/" ]
