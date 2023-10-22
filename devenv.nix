@@ -50,8 +50,6 @@ in
 
   # https://github.com/cachix/devenv/pull/745
   env.LD_LIBRARY_PATH = "";
-  # env.POETRY_VIRTUALENVS_OPTIONS_ALWAYS_COPY = true;
-  # env.POETRY_VIRTUALENVS_CREATE = pkgs.lib.mkForce "false";
 
   languages.python = {
     enable = true;
@@ -89,18 +87,8 @@ in
 
   # TODO: add this to javascript.npm implementation
   enterShell = ''
-    # export PATH="${config.devenv.root}/node_modules/.bin:$PATH"
-    export PATH="/node_modules/.bin:$PATH"
+    export PATH="${config.devenv.root}/node_modules/.bin:$PATH"
     poetry config --list
-    poetry env info
-  '' + lib.optionalString config.container.isBuilding ''
-    # rm -rf "$DEVENV_ROOT"/.venv
-    # poetry install --no-interaction --no-root --verbose
-  '' + ''
-    # cat "$DEVENV_ROOT"/.venv/bin/activate
-    # source "$DEVENV_ROOT"/.venv/bin/activate
-    printenv
-    # ls -la "$DEVENV_ROOT"/.venv/bin
     poetry env info
   '';
 
