@@ -7,6 +7,12 @@ let
       "--dest-creds"
       "x:\"$(${pkgs.flyctl}/bin/flyctl auth token)\""
     ];
+    # Avoid copying the poetry virtual environment.
+    # This is not portable and should be built in the container.
+    copyToRoot =
+      builtins.filterSource
+        (path: type: baseNameOf path != ".venv")
+        ./.;
     # start processses
     startupCommand = config.procfileScript;
   };
