@@ -7,11 +7,16 @@ primary_region = "ams"
   internal_port = 8888
   force_https = false
 
-[[http_service.checks]]
-  grace_period = "1m"
-  interval = "10s"
-  method = "GET"
-  timeout = "1m"
-  protocol = "http"
-  path = "/"
+# Disable all checks
+[[services]]
+  http_checks = []
+  tcp_checks = []
 
+# [[http_service.checks]]
+#   grace_period = "1m"
+#   interval = "10s"
+#   method = "GET"
+#   timeout = "1m"
+#   protocol = "http"
+#   path = "/"
+#
