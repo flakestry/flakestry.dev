@@ -1,22 +1,16 @@
 primary_region = "ams"
 
 [deploy]
-  strategy = "rolling"
+  strategy = "bluegreen"
 
 [http_service]
   internal_port = 8888
-  force_https = false
+  force_https = true
 
-# Disable all checks
-[[services]]
-  http_checks = []
-  tcp_checks = []
-
-# [[http_service.checks]]
-#   grace_period = "1m"
-#   interval = "10s"
-#   method = "GET"
-#   timeout = "1m"
-#   protocol = "http"
-#   path = "/"
-#
+[[http_service.checks]]
+  grace_period = "1m"
+  interval = "15s"
+  method = "GET"
+  timeout = "30s"
+  protocol = "http"
+  path = "/"
