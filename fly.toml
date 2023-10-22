@@ -1,25 +1,18 @@
 primary_region = "ams"
 
 [deploy]
-strategy = "bluegreen"
+  # If the health check goes into a critical state and won't recover, switch back to "rolling" and re-deploy.
+  # Then switch back to "bluegreen".
+  strategy = "bluegreen"
 
-[[services]]
-internal_port = 8888
-protocol = "tcp"
+[http_service]
+  internal_port = 8888
+  force_https = true
 
-[[services.ports]]
-handlers = ["http"]
-port = 80
-force_https = true
-
-[[services.ports]]
-handlers = ["tls", "http"]
-port = "443"
-
-[[services.http_checks]]
-interval = 10000
-grace_period = "5s"
-method = "get"
-path = "/"
-protocol = "http"
-timeout = 2000
+[[http_service.checks]]
+  grace_period = "1m"
+  interval = "15s"
+  method = "GET"
+  timeout = "30s"
+  protocol = "http"
+  path = "/"

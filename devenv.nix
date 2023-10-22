@@ -28,7 +28,7 @@ let
       --image registry.fly.io/flakestry-${env}:latest \
       --env FLAKESTRY_URL=$FLAKESTRY_URL \
       --env OPENSEARCH_HOST=$OPENSEARCH_HOST \
-      --wait-timeout 200
+      --wait-timeout 300
   '';
 in
 {
