@@ -1,7 +1,7 @@
 primary_region = "ams"
 
 [deploy]
-  strategy = "bluegreen"
+  strategy = "rolling"
 
 [http_service]
   internal_port = 8888
