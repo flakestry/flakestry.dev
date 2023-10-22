@@ -5,6 +5,7 @@ import Api.Data as Api
 import Api.Request.Default as Api
 import Components.FlakeCard
 import Components.Search as Search
+import Dict
 import Effect exposing (Effect)
 import Flakestry.Layout
 import Html exposing (..)
@@ -21,8 +22,8 @@ import View exposing (View)
 page : Shared.Model -> Route () -> Page Model Msg
 page shared route =
     Page.new
-        { init = init
-        , update = update
+        { init = init route
+        , update = update route
         , subscriptions = subscriptions
         , view = view
         }
@@ -38,13 +39,34 @@ type alias Model =
     }
 
 
-init : () -> ( Model, Effect Msg )
-init () =
-    ( { searchState = Search.init
-      , latestFlakesResponse = RemoteData.NotAsked
-      }
-    , Effect.sendCmd <|
-        Api.send HandleFlakesResponse (Api.getFlakesFlakeGet Nothing)
+init : Route () -> () -> ( Model, Effect Msg )
+init route () =
+    let
+        newSearchState =
+            Search.init (Dict.get "q" route.query)
+
+        newModel =
+            { searchState = newSearchState
+            , latestFlakesResponse = RemoteData.NotAsked
+            }
+
+        newEffect =
+            Effect.batch
+                [ -- Load the latest flakes
+                  Effect.sendCmd <|
+                    Api.send HandleFlakesResponse (Api.getFlakesFlakeGet Nothing)
+
+                -- Search for flakes based on the query in the url
+                , case newSearchState.query of
+                    Nothing ->
+                        Effect.none
+
+                    Just _ ->
+                        Effect.sendMsg (HandleSearch Search.Search)
+                ]
+    in
+    ( newModel
+    , newEffect
     )
 
 
@@ -57,15 +79,20 @@ type Msg
     | HandleFlakesResponse (Result Http.Error Api.FlakesResponse)
 
 
-update : Msg -> Model -> ( Model, Effect Msg )
-update msg model =
+update : Route () -> Msg -> Model -> ( Model, Effect Msg )
+update route msg model =
     case msg of
         HandleSearch searchMsg ->
             let
                 ( newSearchState, newSearchEffect ) =
                     Search.update searchMsg model.searchState
             in
-            ( { model | searchState = newSearchState }, Effect.map HandleSearch newSearchEffect )
+            ( { model | searchState = newSearchState }
+            , Effect.batch
+                [ Effect.map HandleSearch newSearchEffect
+                , pushQueryToRoute model.searchState searchMsg route "q"
+                ]
+            )
 
         HandleFlakesResponse response ->
             let
@@ -92,7 +119,16 @@ subscriptions model =
 
 view : Model -> View Msg
 view model =
-    { title = "flakestry"
+    let
+        newTitle =
+            case model.searchState.query of
+                Nothing ->
+                    "flakestry: find, install, and publish Nix Flakes"
+
+                Just query ->
+                    query ++ ": flakestry search"
+    in
+    { title = newTitle
     , body =
         Flakestry.Layout.viewBody
             [ Flakestry.Layout.viewNav
@@ -121,23 +157,18 @@ viewSearchResults latestFlakesResponse searchState =
         viewLatestFlakes latestFlakesResponse
 
     else
-        case searchState.searchResponse of
-            RemoteData.NotAsked ->
-                viewLatestFlakes latestFlakesResponse
-
-            _ ->
-                div []
-                    [ h2 [ class "max-w-3xl flex items-center pt-12 text-xl text-slate-900 font-semibold" ]
-                        [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline h-5 w-5" |> Octicons.search
-                        , span [ class "ml-2" ] [ text "Search results" ]
-                        ]
-                    , p [ class "mt-6 text-sm text-slate-600" ]
-                        [ span [] [ text <| "Found " ++ String.fromInt (getSearchCount searchState.searchResponse) ++ " flakes that match " ]
-                        , span [ class "font-semibold" ] [ text <| Maybe.withDefault "" searchState.query ]
-                        , text "."
-                        ]
-                    , viewFlakeResults searchState.searchResponse
-                    ]
+        div []
+            [ h2 [ class "max-w-3xl flex items-center pt-12 text-xl text-slate-900 font-semibold" ]
+                [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline h-5 w-5" |> Octicons.search
+                , span [ class "ml-2" ] [ text "Search results" ]
+                ]
+            , p [ class "mt-6 text-sm text-slate-600" ]
+                [ span [] [ text <| "Found " ++ String.fromInt (getSearchCount searchState.searchResponse) ++ " flakes that match " ]
+                , span [ class "font-semibold" ] [ text <| Maybe.withDefault "" searchState.query ]
+                , text "."
+                ]
+            , viewFlakeResults searchState.searchResponse
+            ]
 
 
 viewLatestFlakes : WebData Api.FlakesResponse -> Html msg
@@ -157,7 +188,7 @@ viewFlakeResults response =
         RemoteData.Success flakes ->
             let
                 viewFlakes =
-                    if List.isEmpty flakes.releases then
+                    if flakes.count == 0 then
                         [ div [ class "mt-12" ] [] ]
 
                     else
@@ -189,3 +220,22 @@ getSearchCount response =
 
         _ ->
             0
+
+
+pushQueryToRoute : Search.Model -> Search.Msg -> Route r -> String -> Effect msg
+pushQueryToRoute searchState msg route queryParam =
+    let
+        newQuery =
+            case msg of
+                Search.Search ->
+                    case searchState.query of
+                        Nothing ->
+                            Dict.remove queryParam route.query
+
+                        Just q ->
+                            Dict.insert queryParam q route.query
+
+                _ ->
+                    route.query
+    in
+    Effect.pushRoute { path = route.path, query = newQuery, hash = route.hash }

@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Optional
 from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
 from pydantic import BaseModel
@@ -29,6 +29,7 @@ class FlakeRelease(FlakeReleaseCompact):
 class FlakesResponse(BaseModel):
     releases: List[FlakeReleaseCompact]
     count: int
+    query: Optional[str] = None
 
 
 class OwnerResponse(BaseModel):
@@ -52,7 +53,7 @@ router = APIRouter()
 def get_flakes(
     session: Session = Depends(get_session),
     opensearch: OpenSearch = Depends(get_opensearch),
-    q: Union[str, None] = None,
+    q: Optional[str] = None,
 ):
     if q:
         response = opensearch.search(
@@ -90,7 +91,7 @@ def get_flakes(
         releases = session.exec(statement).all()
 
     releases = list(map(toFlakeReleaseCompact, releases))
-    return {"releases": releases, "count": len(releases)}
+    return {"releases": releases, "count": len(releases), "query": q}
 
 
 @router.get(

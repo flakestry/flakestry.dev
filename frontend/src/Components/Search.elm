@@ -30,14 +30,14 @@ type Msg
     | KeyDown String
 
 
-init : Model
-init =
-    { query = Nothing
+init : Maybe String -> Model
+init query =
+    { query = query
     , searchResponse = RemoteData.NotAsked
     , debouncer =
         Debouncer.manual
-            |> Debouncer.settleWhenQuietFor (Just <| Debouncer.fromSeconds 3.5)
-            |> Debouncer.emitWhileUnsettled (Just <| Debouncer.fromSeconds 0.5)
+            |> Debouncer.settleWhenQuietFor (Just <| Debouncer.fromSeconds 0.45)
+            |> Debouncer.emitWhileUnsettled (Just <| Debouncer.fromSeconds 1.0)
             |> Debouncer.toDebouncer
     }
 
@@ -96,8 +96,9 @@ update msg model =
             in
             case emittedMsg of
                 Just emitted ->
-                    update emitted updatedModel
-                        |> Tuple.mapSecond (\effect -> Effect.batch [ effect, Effect.sendCmd mappedCmd ])
+                    -- Send the emitted message as a command, instead of running the update manually.
+                    -- This lets the parent view and react to the message.
+                    ( updatedModel, Effect.batch [ Effect.sendMsg emitted, Effect.sendCmd mappedCmd ] )
 
                 Nothing ->
                     ( updatedModel, Effect.sendCmd mappedCmd )
@@ -134,6 +135,7 @@ view props model =
             , name "search"
             , onInput (\query -> SetQuery query |> props.onSearch)
             , onKeyDown (\keyCode -> KeyDown keyCode |> props.onSearch)
+            , value (Maybe.withDefault "" model.query)
             ]
             []
         ]
