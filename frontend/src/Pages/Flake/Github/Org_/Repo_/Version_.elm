@@ -178,6 +178,7 @@ viewRelease model releases release =
                     , Route.Path.href (Route.Path.Flake_Github_Org__Repo_ { org = release.owner, repo = release.repo })
                     ]
                     [ text release.repo ]
+                , a [ href ("https://github.com/" ++ release.owner ++ "/" ++ release.repo) ] [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline m-4" |> Octicons.markGithub ]
                 ]
             , viewVersionDropdown model releases release
             , p [ class "mt-3 text-sm items-center" ]
