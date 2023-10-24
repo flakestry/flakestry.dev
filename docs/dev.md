@@ -3,15 +3,14 @@
 Begin with opensearch/README.md
 
 ```
-$ flyctl apps create flakestry-staging
-$ deploy-staging
-$ flyctl ext sentry create 
+$ env=staging
+$ flyctl apps create flakestry-$env
+$ flyctl ext sentry create --app flakestry-$env
+$ fly postgres create -n flakestry-$env-postgres
+> ams
 
-$ fly postgres create
-> name: flakestry-postgres
-...
-
-$ flyctl postgres attach --app flakestry-staging flakestry-postgres
+$ flyctl postgres attach --app flakestry-$env flakestry-$env-postgres
+$ deploy-$env
 ```
 
 Follow https://micahjon.com/2022/proxy-flyio-cloudflare/
