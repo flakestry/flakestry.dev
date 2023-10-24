@@ -5,12 +5,33 @@ import Html.Attributes as HA
 import Octicons
 
 
+{-| Options to configure how the file is rendered.
+
+  - `fileName` - The name of the file. This is displayed in the header.
+
+  - `contents` - The contents of the file.
+
+  - `class` - Extra classes to add to the file.
+
+  - `language` - The language of the file. The default is "markdown". Markdown
+    is rendered with marked. For other languages, the contents are highlighted
+    with highlight.js.
+
+  - `copyableContents` - Whether to enable the copy button and what to copy into the clipboard.
+
+  - `baseUrl` - The base URL to use when rewriting any relative URLS in the file.
+
+  - `rawBaseUrl` - The base URL to use when rewriting any image URLS in the file.
+
+-}
 type alias Options =
     { fileName : String
     , contents : String
     , class_ : String
     , language : String
     , copyableContents : Maybe String
+    , baseUrl : String
+    , rawBaseUrl : String
     }
 
 
@@ -21,6 +42,8 @@ defaultOptions =
     , class_ = ""
     , language = "markdown"
     , copyableContents = Nothing
+    , baseUrl = ""
+    , rawBaseUrl = ""
     }
 
 
@@ -42,6 +65,16 @@ class value options =
 language : String -> Options -> Options
 language value options =
     { options | language = value }
+
+
+baseUrl : String -> Options -> Options
+baseUrl value options =
+    { options | baseUrl = value }
+
+
+rawBaseUrl : String -> Options -> Options
+rawBaseUrl value options =
+    { options | rawBaseUrl = value }
 
 
 setCopyableContents : Maybe String -> Options -> Options
@@ -79,6 +112,8 @@ view options =
             [ HA.class <| String.join " " [ "px-8 py-8 overflow-x-scroll", options.class_ ]
             , HA.attribute "code" options.contents
             , HA.attribute "language" options.language
+            , HA.attribute "baseUrl" options.baseUrl
+            , HA.attribute "rawBaseUrl" options.rawBaseUrl
             ]
             []
         ]

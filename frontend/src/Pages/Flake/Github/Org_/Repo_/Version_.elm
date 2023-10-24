@@ -192,10 +192,23 @@ viewRelease model releases release =
                 ]
             , p [ class "mt-3 text-lg" ] [ text release.description ]
             ]
-        , File.defaultOptions
+        , let
+            baseUrl =
+                "https://github.com/" ++ release.owner ++ "/" ++ release.repo
+
+            revision =
+                if release.commit == "" then
+                    "HEAD"
+
+                else
+                    release.commit
+          in
+          File.defaultOptions
             |> File.fileName "README"
             |> File.class "markdown-body"
             |> File.contents release.readme
+            |> File.baseUrl (baseUrl ++ "/blob/" ++ revision ++ "/")
+            |> File.rawBaseUrl (baseUrl ++ "/raw/" ++ revision ++ "/")
             |> File.view
         ]
 
