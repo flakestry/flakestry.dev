@@ -8,10 +8,6 @@ window.customElements.define('highlight-code', class extends HTMLElement {
 
   connectedCallback() { this.render(); }
 
-  attributeChangedCallback() { this.render(); };
-
-  static get observedAttributes() { return []; };
-
   render() {
     const code = this.getAttribute('code');
     const lang = this.getAttribute('language') ?? 'markdown';
@@ -37,7 +33,7 @@ window.customElements.define('highlight-code', class extends HTMLElement {
 
   parseMarkdown(markdown, baseUrl = '', rawBaseUrl = '') {
     if (baseUrl) {
-      DOMPurify.addHook('afterSanitizeAttributes', function(node) {
+      this.DOMPurify.addHook('afterSanitizeAttributes', function(node) {
         if (node.hasAttribute('href')) {
           const url = new URL(
             removeRootPath(node.getAttribute('href')),
@@ -56,7 +52,7 @@ window.customElements.define('highlight-code', class extends HTMLElement {
       });
     }
 
-    const sanitized = DOMPurify.sanitize(this._marked.parse(markdown));
+    const sanitized = this.DOMPurify.sanitize(this.marked.parse(markdown));
 
     this.classList.add('block');
     this.innerHTML = sanitized;
@@ -67,19 +63,29 @@ window.customElements.define('highlight-code', class extends HTMLElement {
     return hljs.highlight(code, { language, ignoreIllegals: true }).value;
   }
 
-  get _marked() {
-    if (this.__marked) {
-      return this.__marked;
+  get marked() {
+    if (this._marked) {
+      return this._marked;
     }
 
-    this.__marked = new Marked(
+    this._marked = new Marked(
       markedHighlight({
         langPrefix: 'hljs language-',
         highlight: this.highlightCode
       })
     );
 
-    return this.__marked;
+    return this._marked;
+  }
+
+  get DOMPurify() {
+    if (this._DOMPurify) {
+      return this._DOMPurify;
+    }
+
+    this._DOMPurify = DOMPurify();
+
+    return this._DOMPurify;
   }
 })
 
