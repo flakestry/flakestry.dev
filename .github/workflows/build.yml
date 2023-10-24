@@ -3,7 +3,14 @@ name: "Test"
 on:
   pull_request:
   push:
-
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "Staging or production"
+        type: "string"
+        required: true
 jobs:
   tests:
     strategy:
@@ -24,4 +31,4 @@ jobs:
       if: github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.os == 'ubuntu-latest'
       env:
         FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-      run: devenv shell deploy-staging
+      run: devenv shell deploy-${{ inputs.env || 'staging' }}

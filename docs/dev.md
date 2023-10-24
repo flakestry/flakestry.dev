@@ -1,7 +1,8 @@
 # Setting up fly.io
 
-Begin with opensearch/README.md
+1. Begin with opensearch/README.md
 
+2. 
 ```
 $ env=staging
 $ flyctl apps create flakestry-$env
@@ -13,4 +14,4 @@ $ flyctl postgres attach --app flakestry-$env flakestry-$env-postgres
 $ deploy-$env
 ```
 
-Follow https://micahjon.com/2022/proxy-flyio-cloudflare/
+3. Follow https://micahjon.com/2022/proxy-flyio-cloudflare/
