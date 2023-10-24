@@ -10,15 +10,17 @@ window.customElements.define('highlight-code', class extends HTMLElement {
 
   attributeChangedCallback() { this.render(); };
 
-  static get observedAttributes() { return ['code', 'language']; };
+  static get observedAttributes() { return []; };
 
   render() {
     const code = this.getAttribute('code');
     const lang = this.getAttribute('language') ?? 'markdown';
+    const baseUrl = this.getAttribute('baseUrl') ?? '';
+    const rawBaseUrl = this.getAttribute('rawBaseUrl') ?? '';
 
     switch (lang) {
       case 'markdown':
-        this.parseMarkdown(code);
+        this.parseMarkdown(code, baseUrl, rawBaseUrl);
         break;
       default:
         this.parseCode(code, lang);
@@ -33,7 +35,27 @@ window.customElements.define('highlight-code', class extends HTMLElement {
     this.innerHTML = sanitized;
   }
 
-  parseMarkdown(markdown) {
+  parseMarkdown(markdown, baseUrl = '', rawBaseUrl = '') {
+    if (baseUrl) {
+      DOMPurify.addHook('afterSanitizeAttributes', function(node) {
+        if (node.hasAttribute('href')) {
+          const url = new URL(
+            removeRootPath(node.getAttribute('href')),
+            baseUrl,
+          );
+          node.setAttribute('href', url.toString());
+        }
+
+        if (node.hasAttribute('src')) {
+          const src = new URL(
+            removeRootPath(node.getAttribute('src')),
+            rawBaseUrl || baseUrl,
+          );
+          node.setAttribute('src', src.toString());
+        }
+      });
+    }
+
     const sanitized = DOMPurify.sanitize(this._marked.parse(markdown));
 
     this.classList.add('block');
@@ -60,3 +82,11 @@ window.customElements.define('highlight-code', class extends HTMLElement {
     return this.__marked;
   }
 })
+
+function removeRootPath(path = '') {
+  if (path.startsWith('/')) {
+    return path.substring(1);
+  }
+
+  return path;
+}
