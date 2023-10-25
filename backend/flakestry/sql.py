@@ -80,7 +80,8 @@ else:
     # needed for pg8000
     engine_url = engine_url.replace("?sslmode=disable", "")
 
-engine = create_engine(engine_url)
+# https://community.fly.io/t/postgresql-connection-issues-have-returned/6424/6
+engine = create_engine(engine_url, pool_pre_ping=True)
 
 
 def create_db_and_tables():
