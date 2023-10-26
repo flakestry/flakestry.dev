@@ -102,6 +102,14 @@ def publish(
         headers=github_headers,
     )
     ref_response.raise_for_status()
+    tag_sha = ref_response.json()["object"]["sha"]
+
+    # now we get the commit sha
+    ref_response = requests.get(
+        f"https://api.github.com/repos/{owner_name}/{repository_name}/git/tags/{tag_sha}",
+        headers=github_headers,
+    )
+    ref_response.raise_for_status()
     commit = ref_response.json()["object"]["sha"]
 
     # index README
