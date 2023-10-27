@@ -111,7 +111,7 @@ def publish(
             headers=github_headers,
         )
         tag_response.raise_for_status()
-        commit = ref_response.json()["object"]["sha"]
+        commit = tag_response.json()["object"]["sha"]
 
     # index README
     try:
