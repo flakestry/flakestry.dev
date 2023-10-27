@@ -147,7 +147,7 @@ def publish(
 
     document = {
         "description": description,
-        "readme": readme_response.text,
+        "readme": readme,
         "outputs": str(publish.outputs),
         "repo": repository_name,
         "owner": owner_name,
