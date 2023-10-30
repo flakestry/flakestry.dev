@@ -1,4 +1,10 @@
-@import "github-markdown-css/github-markdown-light.css";
+/* Revert once merged and released:
+ * https://github.com/sindresorhus/generate-github-markdown-css/pull/26
+ *
+ * @import "github-markdown-css/github-markdown-light.css";
+ */
+
+@import "./github-markdown-light.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

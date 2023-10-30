@@ -1,4 +1,5 @@
 import { Marked } from 'marked';
+import markedAlert from 'marked-alert'
 import { markedHighlight } from 'marked-highlight';
 import DOMPurify from 'dompurify';
 import hljs from 'highlight.js';
@@ -68,12 +69,13 @@ window.customElements.define('highlight-code', class extends HTMLElement {
       return this._marked;
     }
 
-    this._marked = new Marked(
-      markedHighlight({
-        langPrefix: 'hljs language-',
-        highlight: this.highlightCode
-      })
-    );
+    this._marked =
+      new Marked(
+        markedHighlight({
+          langPrefix: 'hljs language-',
+          highlight: this.highlightCode
+        })
+      ).use(markedAlert());
 
     return this._marked;
   }
