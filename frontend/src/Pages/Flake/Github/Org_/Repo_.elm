@@ -9,10 +9,10 @@ import Shared
 page : Shared.Model -> Route { org : String, repo : String } -> Page Model Msg
 page _ route =
     Page.new
-        { init = Repo.init route.params.org route.params.repo Nothing
-        , update = Repo.update
+        { init = Repo.init route.params.org route.params.repo Nothing route.hash
         , subscriptions = Repo.subscriptions
         , view = Repo.view
+        , update = Repo.update
         }
 
 

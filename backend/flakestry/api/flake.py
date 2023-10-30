@@ -40,6 +40,10 @@ class RepoResponse(BaseModel):
     releases: List[FlakeRelease]
 
 
+class VersionResponse(BaseModel):
+    id: int
+
+
 router = APIRouter()
 
 
@@ -172,3 +176,24 @@ def toFlakeRelease(release: Release) -> FlakeRelease:
         created_at=release.created_at,
         readme=release.readme or "",
     )
+
+
+@router.get(
+    "/flake/github/{owner}/{repo}/{version}",
+    response_model=Release,
+    responses={
+        422: {"model": ValidationError},
+    },
+)
+def read_version(
+    owner: str, repo: str, version: str, session: Session = Depends(get_session)
+):
+    statement = (
+        select(Release)
+        .join(GitHubRepo)
+        .join(GitHubOwner)
+        .where(GitHubOwner.name == owner)
+        .where(GitHubRepo.name == repo)
+        .where(Release.version == version)
+    )
+    return session.exec(statement).first()

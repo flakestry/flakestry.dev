@@ -108,12 +108,17 @@ view options =
                             )
                         |> Maybe.withDefault []
                    )
-        , Html.node "highlight-code"
-            [ HA.class <| String.join " " [ "px-8 py-8 overflow-x-scroll", options.class_ ]
-            , HA.attribute "code" options.contents
-            , HA.attribute "language" options.language
-            , HA.attribute "baseUrl" options.baseUrl
-            , HA.attribute "rawBaseUrl" options.rawBaseUrl
-            ]
-            []
+        , file options
         ]
+
+
+file : Options -> Html msg
+file options =
+    Html.node "highlight-code"
+        [ HA.class <| String.join " " [ "px-8 py-8 overflow-x-scroll", options.class_ ]
+        , HA.attribute "code" options.contents
+        , HA.attribute "language" options.language
+        , HA.attribute "baseUrl" options.baseUrl
+        , HA.attribute "rawBaseUrl" options.rawBaseUrl
+        ]
+        []

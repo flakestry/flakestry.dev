@@ -13,25 +13,32 @@ import Api.Data as Api
 import Api.Request.Default as Api
 import Api.Time as ApiTime
 import Components.File as File
+import Dict
 import Dropdown
 import Effect exposing (Effect)
+import Flakestry.FlakeSchema
 import Flakestry.Layout
+import Flakestry.MetadataSchema
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick, onInput)
 import Http
+import Json.Decode
 import Octicons
 import Page exposing (Page)
 import RemoteData exposing (WebData)
 import Route exposing (Route)
 import Route.Path
 import Shared
+import Svg exposing (svg)
+import Svg.Attributes as SvgAttr
 import View exposing (View)
 
 
 page : Shared.Model -> Route { org : String, repo : String, version : String } -> Page Model Msg
 page _ route =
     Page.new
-        { init = init route.params.org route.params.repo (Just route.params.version)
+        { init = init route.params.org route.params.repo (Just route.params.version) route.hash
         , update = update
         , subscriptions = subscriptions
         , view = view
@@ -40,16 +47,36 @@ page _ route =
 
 type alias Model =
     { repoResponse : WebData Api.RepoResponse
+    , releaseResponse : WebData Api.Release
+    , org : String
+    , repo : String
+    , route : Route.Path.Path
+    , hash : Maybe String
+    , selectedOutput : Maybe { section : String, output : String, drv : Flakestry.FlakeSchema.Derivation, systems : List String }
+
+    -- global for the whole flake
+    , system : String
+    , searchQuery : Maybe String
     , versionDropdownIsOpen : Bool
     , version : Maybe String
     }
 
 
-init : String -> String -> Maybe String -> () -> ( Model, Effect Msg )
-init org repo version _ =
+init : String -> String -> Maybe String -> Maybe String -> () -> ( Model, Effect Msg )
+init org repo version hash _ =
     ( { repoResponse = RemoteData.NotAsked
       , versionDropdownIsOpen = False
       , version = version
+      , org = org
+      , selectedOutput = Nothing
+      , route = thisRoute { org = org, repo = repo, version = version }
+      , hash = hash
+
+      -- TODO: this should pick a sane default if x86_64-linux is not available
+      , system = "x86_64-linux"
+      , repo = repo
+      , searchQuery = Nothing
+      , releaseResponse = RemoteData.NotAsked
       }
     , Effect.sendCmd <|
         Api.send HandleGetRepoResponse <|
@@ -63,19 +90,87 @@ init org repo version _ =
 
 type Msg
     = HandleGetRepoResponse (Result Http.Error Api.RepoResponse)
+    | HandleGetVersionResponse (Result Http.Error Api.Release)
     | ToggleVersionDropdown Bool
+    | SearchInput String
+    | ChangeTab String
+    | SelectOutput String String Flakestry.FlakeSchema.Derivation (List String)
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
 update msg model =
     case msg of
         HandleGetRepoResponse response ->
-            ( { model | repoResponse = RemoteData.fromResult response }
+            let
+                data =
+                    RemoteData.fromResult response
+
+                maybeVersion =
+                    case ( model.version, data ) of
+                        ( Just version, _ ) ->
+                            Just version
+
+                        ( Nothing, RemoteData.Success repo ) ->
+                            Maybe.map .version (List.head repo.releases)
+
+                        ( Nothing, _ ) ->
+                            Nothing
+            in
+            ( { model | repoResponse = data }
+            , case maybeVersion of
+                Nothing ->
+                    Effect.none
+
+                Just version ->
+                    Effect.sendCmd <|
+                        Api.send HandleGetVersionResponse <|
+                            Api.readVersionFlakeGithubOwnerRepoVersionGet model.org model.repo version
+            )
+
+        HandleGetVersionResponse response ->
+            let
+                data =
+                    RemoteData.fromResult response
+            in
+            ( { model | releaseResponse = data }
             , Effect.none
             )
 
         ToggleVersionDropdown isOpen ->
             ( { model | versionDropdownIsOpen = isOpen }
+            , Effect.none
+            )
+
+        ChangeTab tab ->
+            ( { model | hash = Just tab }
+            , Effect.none
+            )
+
+        SearchInput query ->
+            ( { model
+                | searchQuery =
+                    case query of
+                        "" ->
+                            Nothing
+
+                        q ->
+                            Just q
+                , hash =
+                    case query of
+                        "" ->
+                            model.hash
+
+                        _ ->
+                            Just "outputs"
+              }
+            , Effect.none
+            )
+
+        SelectOutput section output drv systems ->
+            ( { model
+                | selectedOutput = Just { section = section, output = output, drv = drv, systems = systems }
+                , hash = Just "outputs"
+              }
             , Effect.none
             )
 
@@ -106,7 +201,7 @@ viewRemoteData webdata viewData =
             , body =
                 Flakestry.Layout.viewBody
                     [ Flakestry.Layout.viewNav
-                    , text "loading ..."
+                    , spinner
                     , Flakestry.Layout.viewFooter
                     ]
             }
@@ -197,25 +292,367 @@ viewRelease model releases release =
                 ]
             , p [ class "mt-3 text-lg" ] [ text release.description ]
             ]
-        , let
-            baseUrl =
-                "https://github.com/" ++ release.owner ++ "/" ++ release.repo
-
-            revision =
-                if release.commit == "" then
-                    "HEAD"
-
-                else
-                    release.commit
-          in
-          File.defaultOptions
-            |> File.fileName "README"
-            |> File.class "markdown-body"
-            |> File.contents release.readme
-            |> File.baseUrl (baseUrl ++ "/blob/" ++ revision ++ "/")
-            |> File.rawBaseUrl (baseUrl ++ "/raw/" ++ revision ++ "/")
-            |> File.view
+        , viewOutputs model release
         ]
+
+
+remoteRelease : Model -> (Api.Release -> Html Msg) -> Html Msg
+remoteRelease model v =
+    case model.releaseResponse of
+        RemoteData.NotAsked ->
+            text ""
+
+        RemoteData.Loading ->
+            spinner
+
+        RemoteData.Failure _ ->
+            text "HTTP error happened"
+
+        RemoteData.Success release ->
+            v release
+
+
+viewOutputs : Model -> Api.FlakeRelease -> Html Msg
+viewOutputs model flakeRelease =
+    remoteRelease model
+        (\release ->
+            let
+                outputs =
+                    parseOutputs release
+
+                baseUrl =
+                    "https://github.com/" ++ flakeRelease.owner ++ "/" ++ flakeRelease.repo
+
+                revision =
+                    if flakeRelease.commit == "" then
+                        "HEAD"
+
+                    else
+                        flakeRelease.commit
+
+                tab name hash icon =
+                    let
+                        isActive =
+                            case model.hash of
+                                Nothing ->
+                                    "readme" == hash
+
+                                Just h ->
+                                    hash == h
+                    in
+                    li
+                        [ class "mr-2"
+                        ]
+                        [ a
+                            [ Route.href { hash = Just hash, path = model.route, query = Dict.empty }
+                            , onClick (ChangeTab hash)
+                            , class
+                                ("""inline-block p-4 rounded-t-lg border-b-2 hover:text-blue-900 hover:border-blue-900 """
+                                    ++ (if isActive then
+                                            "text-blue-900 border-blue-900"
+
+                                        else
+                                            "border-transparent"
+                                       )
+                                )
+                            ]
+                            [ Octicons.defaultOptions
+                                |> Octicons.color "currentColor"
+                                |> Octicons.size 16
+                                |> Octicons.class "inline shrink-0 mr-2"
+                                |> icon
+                            , text name
+                            ]
+                        ]
+            in
+            div
+                [ class "grid grid-cols-12 overflow-hidden rounded shadow"
+                ]
+                [ aside
+                    [ class "col-span-3 h-full flex flex-col bg-white dark:bg-gray-800"
+                    ]
+                    [ div
+                        [ class "px-4 py-2"
+                        ]
+                        [ Html.form [ class "flex place-items-center" ]
+                            [ div
+                                [ class "relative"
+                                ]
+                                [ div
+                                    [ class "absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+                                    ]
+                                    [ svg
+                                        [ SvgAttr.class "w-4 h-4 text-gray-500 dark:text-gray-400"
+                                        , attribute "aria-hidden" "true"
+                                        , SvgAttr.fill "none"
+                                        , SvgAttr.viewBox "0 0 20 20"
+                                        ]
+                                        [ Svg.path
+                                            [ SvgAttr.stroke "currentColor"
+                                            , SvgAttr.strokeLinecap "round"
+                                            , SvgAttr.strokeLinejoin "round"
+                                            , SvgAttr.strokeWidth "2"
+                                            , SvgAttr.d "m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+                                            ]
+                                            []
+                                        ]
+                                    ]
+                                , input
+                                    [ type_ "search"
+                                    , id "default-search"
+                                    , class """block w-full p-2 pl-10 text-sm text-black border border-gray-200 rounded-lg
+                                            bg-transparent focus:ring-blue-500 focus:border-blue-500"""
+                                    , placeholder "Search outputs ..."
+                                    , onInput SearchInput
+                                    ]
+                                    []
+                                ]
+                            ]
+                        ]
+                    , nav
+                        [ class "flex-1 overflow-y-auto p-4 space-y-2"
+                        ]
+                        (case outputs of
+                            Ok o ->
+                                viewOutputSections model o
+
+                            Err err ->
+                                [ text err ]
+                        )
+                    ]
+                , main_
+                    [ class "col-span-9 bg-white  border-l border-slate-100"
+                    ]
+                    [ div
+                        [ class "text-sm font-medium text-center text-gray-500 dark:text-gray-400 dark:border-gray-700"
+                        ]
+                        [ ul
+                            [ class "flex flex-wrap -mb-px"
+                            ]
+                            [ tab "README" "readme" Octicons.file
+                            , tab "Outputs" "outputs" Octicons.fileDirectory
+                            , tab "Inputs" "inputs" Octicons.package
+                            ]
+                        ]
+                    , case model.hash of
+                        Just "inputs" ->
+                            viewInputs release
+
+                        Just "outputs" ->
+                            viewOutput model
+
+                        _ ->
+                            File.defaultOptions
+                                |> File.fileName "README"
+                                |> File.class "markdown-body"
+                                |> File.contents flakeRelease.readme
+                                |> File.baseUrl (baseUrl ++ "/blob/" ++ revision ++ "/")
+                                |> File.rawBaseUrl (baseUrl ++ "/raw/" ++ revision ++ "/")
+                                |> File.file
+                    ]
+                ]
+        )
+
+
+viewOutput : Model -> Html Msg
+viewOutput model =
+    div [ class "p-4" ]
+        [ case model.selectedOutput of
+            Nothing ->
+                text "Select an output in the side bar."
+
+            Just output ->
+                let
+                    mkSystem system =
+                        button
+                            [ type_ "button"
+                            , class
+                                ("""px-4 py-2 text-sm font-medium text-gray-900 bg-transparent border mr-4
+                                    rounded-lg hover:bg-black hover:text-white focus:z-10 
+                                    dark:border-white dark:text-white dark:hover:text-white 
+                                    dark:hover:bg-gray-700 dark:focus:bg-gray-700"""
+                                    ++ (if system == model.system then
+                                            " bg-black text-white"
+
+                                        else
+                                            ""
+                                       )
+                                )
+                            ]
+                            [ text system ]
+
+                    mkSection title =
+                        div [ class "text-lg font-semibold mt-4" ] [ text title ]
+                in
+                div []
+                    [ mkSection "systems"
+                    , div
+                        [ class "flex rounded-md m-4"
+                        , attribute "role" "group"
+                        ]
+                        (List.map mkSystem output.systems)
+                    , mkSection "attribute"
+                    , span [ class "m-4" ] [ text output.output ]
+                    , mkSection "description"
+                    , span [ class "m-4" ] [ text output.drv.description ]
+                    , mkSection "type"
+                    , span [ class "m-4" ] [ text output.drv.type_ ]
+                    ]
+        ]
+
+
+viewInputs : Api.Release -> Html Msg
+viewInputs release =
+    let
+        inputs =
+            case release.metaData of
+                Nothing ->
+                    Dict.empty
+
+                Just i ->
+                    Flakestry.MetadataSchema.decodeRootInputsUrl i
+
+        viewInput ( name, url ) =
+            tr []
+                [ td [ class "border px-4 py-2" ] [ text name ]
+                , td [ class "border px-4 py-2" ] [ text url ]
+                ]
+    in
+    div [ class "container mx-auto p-6" ]
+        [ table [ class "min-w-full bg-white" ]
+            [ thead []
+                [ tr []
+                    [ th [ class "w-1/3 text-left py-3 px-4 uppercase font-semibold text-sm" ] [ text "Input Name" ]
+                    , th [ class "w-2/3 text-left py-3 px-4 uppercase font-semibold text-sm" ] [ text "URL" ]
+                    ]
+                ]
+            , tbody []
+                (List.map viewInput (Dict.toList inputs))
+            ]
+        ]
+
+
+viewOutputSections : Model -> Flakestry.FlakeSchema.Root -> List (Html Msg)
+viewOutputSections model root =
+    let
+        isSelectedOutput section name =
+            case model.selectedOutput of
+                Nothing ->
+                    False
+
+                Just output ->
+                    output.section == section && output.output == name
+
+        mkSubsection section systems ( name, derivation ) =
+            if
+                case model.searchQuery of
+                    Nothing ->
+                        False
+
+                    Just query ->
+                        not (String.contains query name)
+            then
+                text ""
+
+            else
+                li []
+                    [ a
+                        [ Route.href { hash = Just "outputs", path = model.route, query = Dict.empty }
+                        , onClick (SelectOutput section name derivation systems)
+                        , class
+                            ("""flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-blue-900
+                               hover:text-white dark:text-gray-300 dark:hover:bg-gray-700
+                            """
+                                ++ (if isSelectedOutput section name then
+                                        " bg-blue-900 text-white"
+
+                                    else
+                                        ""
+                                   )
+                            )
+                        ]
+                        [ span
+                            [ class "ml-2"
+                            ]
+                            [ text name ]
+                        ]
+                    ]
+
+        mkSection title maybeItems =
+            case maybeItems of
+                Nothing ->
+                    div [] []
+
+                Just items ->
+                    div []
+                        [ div
+                            [ class "text-sm font-semibold text-gray-500 dark:text-gray-300"
+                            ]
+                            [ text title ]
+                        , ul
+                            [ class "mt-2 space-y-1"
+                            ]
+                            (case Dict.get model.system items of
+                                Nothing ->
+                                    [ li [] [ text ("No outputs for " ++ model.system) ] ]
+
+                                Just attrs ->
+                                    List.map (mkSubsection title (Dict.keys items)) (Dict.toList attrs)
+                            )
+                        ]
+    in
+    [ mkSection "packages" root.packages
+    , mkSection "legacyPackages" root.legacyPacakges
+    , mkSection "devShells" root.devShells
+    , mkSection "checks" root.checks
+
+    -- TODO: apps, templates, formatters, overlays, modules, configurations
+    ]
+
+
+parseOutputs : Api.Release -> Result String Flakestry.FlakeSchema.Root
+parseOutputs release =
+    case release.outputs of
+        Nothing ->
+            Err "No outputs found"
+
+        Just jsonOutputs ->
+            case Flakestry.FlakeSchema.decodeJson jsonOutputs of
+                Ok o2 ->
+                    Ok o2
+
+                Err err ->
+                    Err (Json.Decode.errorToString err)
+
+
+spinner : Html msg
+spinner =
+    svg
+        [ SvgAttr.class "animate-spin h-5 w-5 text-black"
+        , SvgAttr.fill "none"
+        , SvgAttr.viewBox "0 0 24 24"
+        ]
+        [ Svg.circle
+            [ SvgAttr.class "opacity-25"
+            , SvgAttr.cx "12"
+            , SvgAttr.cy "12"
+            , SvgAttr.r "10"
+            , SvgAttr.stroke "currentColor"
+            , SvgAttr.strokeWidth "4"
+            ]
+            []
+        , Svg.path
+            [ SvgAttr.class "opacity-75"
+            , SvgAttr.fill "currentColor"
+            , SvgAttr.d "M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ]
+            []
+        ]
+
+
+thisRoute : { org : String, repo : String, version : Maybe String } -> Route.Path.Path
+thisRoute model =
+    Route.Path.Flake_Github_Org__Repo__Version_ { org = model.org, repo = model.repo, version = Maybe.withDefault "" model.version }
 
 
 viewVersionDropdown : Model -> List Api.FlakeRelease -> Api.FlakeRelease -> Html Msg
@@ -231,7 +668,7 @@ viewVersionDropdown model releases release =
             \r ->
                 a
                     [ class "p-2 hover:underline hover:cursor-pointer"
-                    , Route.Path.href (Route.Path.Flake_Github_Org__Repo__Version_ { org = r.owner, repo = r.repo, version = r.version })
+                    , Route.Path.href (thisRoute { org = r.owner, repo = r.repo, version = Just r.version })
                     ]
                     [ tag, text r.version ]
     in
