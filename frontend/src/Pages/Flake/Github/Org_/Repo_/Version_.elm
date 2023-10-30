@@ -375,7 +375,7 @@ viewOutputs model flakeRelease =
                 [ class "grid grid-cols-3 sm:grid-cols-12 overflow-hidden rounded shadow"
                 ]
                 [ aside
-                    [ class "col-span-3 h-full flex flex-col bg-white dark:bg-gray-800"
+                    [ class "col-span-3 h-full flex flex-col bg-white"
                     ]
                     [ div
                         [ class "px-4 py-2"
@@ -388,7 +388,7 @@ viewOutputs model flakeRelease =
                                     [ class "absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
                                     ]
                                     [ svg
-                                        [ SvgAttr.class "w-4 h-4 text-gray-500 dark:text-gray-400"
+                                        [ SvgAttr.class "w-4 h-4 text-gray-500"
                                         , attribute "aria-hidden" "true"
                                         , SvgAttr.fill "none"
                                         , SvgAttr.viewBox "0 0 20 20"
@@ -430,7 +430,7 @@ viewOutputs model flakeRelease =
                     [ class "col-span-9 bg-white  border-l border-slate-100"
                     ]
                     [ div
-                        [ class "text-sm font-medium text-center text-gray-500 dark:text-gray-400 dark:border-gray-700"
+                        [ class "text-sm font-medium text-center text-gray-500"
                         ]
                         [ ul
                             [ class "flex flex-wrap -mb-px"
@@ -564,9 +564,9 @@ viewOutputSections model root =
                     [ a
                         [ Route.href { hash = Just "outputs", path = model.route, query = Dict.empty }
                         , onClick (SelectOutput section name derivation systems)
-                        , class
-                            ("""flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-blue-900
-                               hover:text-white dark:text-gray-300 dark:hover:bg-gray-700
+                        , class <|
+                            """flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-blue-900
+                               hover:text-white
                             """
                                 ++ (if isSelectedOutput section name then
                                         " bg-blue-900 text-white"
@@ -574,7 +574,6 @@ viewOutputSections model root =
                                     else
                                         ""
                                    )
-                            )
                         ]
                         [ span
                             [ class "ml-2"
@@ -591,7 +590,7 @@ viewOutputSections model root =
                 Just items ->
                     div []
                         [ div
-                            [ class "text-sm font-semibold text-gray-500 dark:text-gray-300"
+                            [ class "text-sm font-semibold text-gray-500"
                             ]
                             [ text title ]
                         , ul
