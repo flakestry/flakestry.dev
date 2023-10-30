@@ -95,6 +95,7 @@ type Msg
     | SearchInput String
     | ChangeTab String
     | SelectOutput String String Flakestry.FlakeSchema.Derivation (List String)
+    | SelectSystem String
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
@@ -171,6 +172,11 @@ update msg model =
                 | selectedOutput = Just { section = section, output = output, drv = drv, systems = systems }
                 , hash = Just "outputs"
               }
+            , Effect.none
+            )
+
+        SelectSystem system ->
+            ( { model | system = system }
             , Effect.none
             )
 
@@ -466,17 +472,16 @@ viewOutput model =
                     mkSystem system =
                         button
                             [ type_ "button"
+                            , onClick (SelectSystem system)
                             , class
-                                ("""px-4 py-2 text-sm font-medium text-gray-900 bg-transparent border mr-4
-                                    rounded-lg hover:bg-black hover:text-white focus:z-10 
-                                    dark:border-white dark:text-white dark:hover:text-white 
-                                    dark:hover:bg-gray-700 dark:focus:bg-gray-700"""
-                                    ++ (if system == model.system then
-                                            " bg-black text-white"
+                                ((if system == model.system then
+                                    "bg-black text-white"
 
-                                        else
-                                            ""
-                                       )
+                                  else
+                                    "text-black bg-transparent"
+                                 )
+                                    ++ """ px-4 py-2 text-sm font-medium border mr-4
+                                    rounded-lg hover:bg-black hover:text-white"""
                                 )
                             ]
                             [ text system ]
