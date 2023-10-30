@@ -121,6 +121,12 @@ in
       ${config.devenv.root}/frontend/generated-api/src/Api.elm
   '';
 
+  # Generate the GitHub Markdown CSS
+  # Switch back to https://github.com/sindresorhus/github-markdown-css/ once https://github.com/sindresorhus/generate-github-markdown-css/pull/26 is merged.
+  scripts.generate-github-markdown-css.exec = ''
+    ./node_modules/.bin/github-markdown-css --theme light > ${config.devenv.root}/frontend/src/github-markdown-light.css
+  '';
+
   processes = {
     backend.exec = "cd ${config.devenv.root} && uvicorn --app-dir backend ${lib.optionalString (!config.container.isBuilding) "--reload"} flakestry.main:app";
   } // lib.optionalAttrs (!config.container.isBuilding) {
