@@ -372,7 +372,7 @@ viewOutputs model flakeRelease =
                         ]
             in
             div
-                [ class "grid grid-cols-12 overflow-hidden rounded shadow"
+                [ class "grid grid-cols-3 sm:grid-cols-12 overflow-hidden rounded shadow"
                 ]
                 [ aside
                     [ class "col-span-3 h-full flex flex-col bg-white dark:bg-gray-800"
