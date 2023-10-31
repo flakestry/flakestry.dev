@@ -40,10 +40,6 @@ class RepoResponse(BaseModel):
     releases: List[FlakeRelease]
 
 
-class VersionResponse(BaseModel):
-    id: int
-
-
 router = APIRouter()
 
 
