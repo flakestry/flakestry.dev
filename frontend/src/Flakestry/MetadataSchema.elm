@@ -62,7 +62,7 @@ extractRootInputsUrl locks =
                         Just node ->
                             case node.locked of
                                 Just locked ->
-                                    locked.type_ ++ ":" ++ locked.owner ++ "/" ++ locked.repo
+                                    locked.type_ ++ ":" ++ locked.owner ++ "/" ++ locked.repo ++ "/" ++ locked.rev
 
                                 Nothing ->
                                     ""
