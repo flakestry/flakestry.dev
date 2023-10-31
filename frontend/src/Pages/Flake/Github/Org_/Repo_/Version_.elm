@@ -480,7 +480,7 @@ viewOutput model =
                                   else
                                     "text-black bg-transparent"
                                  )
-                                    ++ """ px-4 py-2 text-sm font-medium border mr-4
+                                    ++ """ px-4 py-2 text-sm font-medium border m-2
                                     rounded-lg hover:bg-black hover:text-white"""
                                 )
                             ]
@@ -492,7 +492,7 @@ viewOutput model =
                 div []
                     [ mkSection "systems"
                     , div
-                        [ class "flex rounded-md m-4"
+                        [ class "rounded-md m-4"
                         , attribute "role" "group"
                         ]
                         (List.map mkSystem output.systems)
