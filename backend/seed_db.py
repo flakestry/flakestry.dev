@@ -149,7 +149,57 @@ def main() -> None:
                             "description": "Distributed version control system",
                             "name": "git-2.40.1",
                             "type": "derivation",
-                        }
+                        },
+                        "git2": {
+                            "description": "Distributed version control system",
+                            "name": "git-2.40.1",
+                            "type": "derivation",
+                        },
+                        "git3": {
+                            "description": "Distributed version control system",
+                            "name": "git-2.40.1",
+                            "type": "derivation",
+                        },
+                        "git4": {
+                            "description": "Distributed version control system",
+                            "name": "git-2.40.1",
+                            "type": "derivation",
+                        },
+                        "git5": {
+                            "description": "Distributed version control system",
+                            "name": "git-2.40.1",
+                            "type": "derivation",
+                        },
+                        "git6": {
+                            "description": "Distributed version control system",
+                            "name": "git-2.40.1",
+                            "type": "derivation",
+                        },
+                        "git7": {
+                            "description": "Distributed version control system",
+                            "name": "git-2.40.1",
+                            "type": "derivation",
+                        },
+                        "git8": {
+                            "description": "Distributed version control system",
+                            "name": "git-2.40.1",
+                            "type": "derivation",
+                        },
+                        "git9": {
+                            "description": "Distributed version control system",
+                            "name": "git-2.40.1",
+                            "type": "derivation",
+                        },
+                        "git10": {
+                            "description": "Distributed version control system",
+                            "name": "git-2.40.1",
+                            "type": "derivation",
+                        },
+                        "git11": {
+                            "description": "Distributed version control system",
+                            "name": "git-2.40.1",
+                            "type": "derivation",
+                        },
                     },
                     "x86_64-linux": {
                         "git": {

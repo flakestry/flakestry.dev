@@ -56,6 +56,7 @@ type alias Model =
 
     -- global for the whole flake
     , system : String
+    , expandSections : List String
     , searchQuery : Maybe String
     , versionDropdownIsOpen : Bool
     , version : Maybe String
@@ -71,6 +72,7 @@ init org repo version hash _ =
       , selectedOutput = Nothing
       , route = thisRoute { org = org, repo = repo, version = version }
       , hash = hash
+      , expandSections = []
 
       -- TODO: this should pick a sane default if x86_64-linux is not available
       , system = "x86_64-linux"
@@ -96,6 +98,7 @@ type Msg
     | ChangeTab String
     | SelectOutput String String Flakestry.FlakeSchema.Derivation (List String)
     | SelectSystem String
+    | ExpandSection String
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
@@ -177,6 +180,11 @@ update msg model =
 
         SelectSystem system ->
             ( { model | system = system }
+            , Effect.none
+            )
+
+        ExpandSection section ->
+            ( { model | expandSections = section :: model.expandSections }
             , Effect.none
             )
 
@@ -496,8 +504,8 @@ viewOutput model =
                         , attribute "role" "group"
                         ]
                         (List.map mkSystem output.systems)
-                    , mkSection "attribute"
-                    , span [ class "m-4" ] [ text output.output ]
+                    , mkSection "name"
+                    , span [ class "m-4" ] [ text output.drv.name ]
                     , mkSection "description"
                     , span [ class "m-4" ] [ text output.drv.description ]
                     , mkSection "type"
@@ -540,6 +548,9 @@ viewInputs release =
 viewOutputSections : Model -> Flakestry.FlakeSchema.Root -> List (Html Msg)
 viewOutputSections model root =
     let
+        subsectionClasses =
+            "flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-blue-900 hover:text-white"
+
         isSelectedOutput section name =
             case model.selectedOutput of
                 Nothing ->
@@ -565,9 +576,7 @@ viewOutputSections model root =
                         [ Route.href { hash = Just "outputs", path = model.route, query = Dict.empty }
                         , onClick (SelectOutput section name derivation systems)
                         , class <|
-                            """flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-blue-900
-                               hover:text-white
-                            """
+                            subsectionClasses
                                 ++ (if isSelectedOutput section name then
                                         " bg-blue-900 text-white"
 
@@ -601,7 +610,27 @@ viewOutputSections model root =
                                     [ li [] [ text ("No outputs for " ++ model.system) ] ]
 
                                 Just attrs ->
-                                    List.map (mkSubsection title (Dict.keys items)) (Dict.toList attrs)
+                                    let
+                                        attrsList =
+                                            Dict.toList attrs
+
+                                        ( attrsFinal, paginate ) =
+                                            case ( List.length attrsList > 10, List.member title model.expandSections, model.searchQuery ) of
+                                                ( True, False, Nothing ) ->
+                                                    ( List.take 10 attrsList
+                                                    , [ a
+                                                            [ onClick (ExpandSection title)
+                                                            , href "#outputs"
+                                                            , class subsectionClasses
+                                                            ]
+                                                            [ text "... Show more" ]
+                                                      ]
+                                                    )
+
+                                                _ ->
+                                                    ( attrsList, [] )
+                                    in
+                                    List.map (mkSubsection title (Dict.keys items)) attrsFinal ++ paginate
                             )
                         ]
     in
