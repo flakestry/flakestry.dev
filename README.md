@@ -30,8 +30,8 @@ Maintainers: [@domenkozar](https://github.com/domenkozar).
 
 ## Roadmap
 
-- [ ] Prototype [semantic versioning of flakes](https://github.com/NixOS/rfcs/pull/144).
-
-- [ ] [Show flake metadata like dependencies and packages for each flake](https://github.com/flakestry/flakestry.dev/issues/2).
+- [x] [Show flake metadata like dependencies and packages for each flake](https://github.com/flakestry/flakestry.dev/issues/2).
 
 - [ ] [Support uploading non-github flakes](https://github.com/flakestry/flakestry.dev/issues/1).
+
+- [ ] Prototype [semantic versioning of flakes](https://github.com/NixOS/rfcs/pull/144).
