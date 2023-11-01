@@ -62,6 +62,7 @@ def get_flakes(
                 "query": {
                     "multi_match": {
                         "query": q,
+                        "fuzziness": "AUTO",
                         "fields": [
                             "description^2",
                             "readme",
