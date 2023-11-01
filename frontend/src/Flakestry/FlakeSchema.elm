@@ -1,27 +1,23 @@
-module Flakestry.FlakeSchema exposing (Derivation, Lib, Platform, Root, decodeJson)
+module Flakestry.FlakeSchema exposing (..)
 
 import Dict exposing (Dict)
 import Json.Decode as Decode exposing (Decoder, dict, field, maybe, string)
+import Json.Decode.Pipeline as Pipeline
 
 
 
 -- Type definitions
 
 
-type alias Derivation =
-    { description : Maybe String
-    , name : String
-    , type_ : String
-    }
-
-
-type alias Platform =
-    Dict String (Dict String Derivation)
-
-
-type alias Lib =
+type alias Output =
     { type_ : String
+    , name : Maybe String
+    , description : Maybe String
     }
+
+
+type alias OptionalOutput a =
+    Maybe (Dict String a)
 
 
 
@@ -29,11 +25,16 @@ type alias Lib =
 
 
 type alias Root =
-    { checks : Maybe Platform
-    , lib : Maybe Lib
-    , packages : Maybe Platform
-    , legacyPacakges : Maybe Platform
-    , devShells : Maybe Platform
+    { checks : OptionalOutput (Dict String Output)
+    , apps : OptionalOutput (Dict String Output)
+    , packages : OptionalOutput (Dict String Output)
+    , legacyPacakges : OptionalOutput (Dict String Output)
+    , devShells : OptionalOutput (Dict String Output)
+    , formatter : OptionalOutput Output
+    , overlays : OptionalOutput Output
+    , nixosModules : OptionalOutput Output
+    , nixosConfigurations : OptionalOutput Output
+    , templates : OptionalOutput Output
     }
 
 
@@ -41,32 +42,31 @@ type alias Root =
 -- Decoders
 
 
-derivationDecoder : Decoder Derivation
-derivationDecoder =
-    Decode.map3 Derivation
-        (maybe (field "description" string))
-        (field "name" string)
+outputDecoder : Decoder Output
+outputDecoder =
+    Decode.map3 Output
         (field "type" string)
+        (maybe (field "description" string))
+        (maybe (field "name" string))
 
 
-platformDecoder : Decoder Platform
-platformDecoder =
-    dict (dict derivationDecoder)
-
-
-libDecoder : Decoder Lib
-libDecoder =
-    Decode.map Lib (field "type" string)
+optionalMaybe name decoder =
+    Pipeline.optional name (Decode.map Just decoder) Nothing
 
 
 rootDecoder : Decoder Root
 rootDecoder =
-    Decode.map5 Root
-        (maybe (field "checks" platformDecoder))
-        (maybe (field "lib" libDecoder))
-        (maybe (field "packages" platformDecoder))
-        (maybe (field "legacyPackages" platformDecoder))
-        (maybe (field "devShells" platformDecoder))
+    Decode.succeed Root
+        |> optionalMaybe "checks" (dict (dict outputDecoder))
+        |> optionalMaybe "apps" (dict (dict outputDecoder))
+        |> optionalMaybe "packages" (dict (dict outputDecoder))
+        |> optionalMaybe "legacyPackages" (dict (dict outputDecoder))
+        |> optionalMaybe "devShells" (dict (dict outputDecoder))
+        |> optionalMaybe "formatter" (dict outputDecoder)
+        |> optionalMaybe "overlays" (dict outputDecoder)
+        |> optionalMaybe "nixosModules" (dict outputDecoder)
+        |> optionalMaybe "nixosConfigurations" (dict outputDecoder)
+        |> optionalMaybe "templates" (dict outputDecoder)
 
 
 decodeJson : Decode.Value -> Result Decode.Error Root

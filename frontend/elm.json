@@ -9,6 +9,7 @@
     "dependencies": {
         "direct": {
             "Gizra/elm-debouncer": "2.0.0",
+            "NoRedInk/elm-json-decode-pipeline": "1.0.1",
             "capitalist/elm-octicons": "2.3.0",
             "circuithub/elm-dropdown": "1.0.0",
             "elm/browser": "1.0.2",

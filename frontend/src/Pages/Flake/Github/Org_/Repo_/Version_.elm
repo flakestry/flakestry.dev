@@ -52,7 +52,13 @@ type alias Model =
     , repo : String
     , route : Route.Path.Path
     , hash : Maybe String
-    , selectedOutput : Maybe { section : String, output : String, drv : Flakestry.FlakeSchema.Derivation, systems : List String }
+    , selectedOutput :
+        Maybe
+            { section : String
+            , output : String
+            , drv : Flakestry.FlakeSchema.Output
+            , systems : List String
+            }
 
     -- global for the whole flake
     , system : String
@@ -96,7 +102,7 @@ type Msg
     | ToggleVersionDropdown Bool
     | SearchInput String
     | ChangeTab String
-    | SelectOutput String String Flakestry.FlakeSchema.Derivation (List String)
+    | SelectOutput String String Flakestry.FlakeSchema.Output (List String)
     | SelectSystem String
     | ExpandSection String
 
@@ -498,19 +504,41 @@ viewOutput model =
                         div [ class "text-lg font-semibold mt-4" ] [ text title ]
                 in
                 div []
-                    [ mkSection "systems"
-                    , div
-                        [ class "rounded-md m-4"
-                        , attribute "role" "group"
-                        ]
-                        (List.map mkSystem output.systems)
-                    , mkSection "name"
-                    , span [ class "m-4" ] [ text output.drv.name ]
-                    , mkSection "description"
-                    , span [ class "m-4" ] [ text (Maybe.withDefault "" output.drv.description) ]
-                    , mkSection "type"
-                    , span [ class "m-4" ] [ text output.drv.type_ ]
-                    ]
+                    ((case List.map mkSystem output.systems of
+                        [] ->
+                            []
+
+                        systems ->
+                            [ mkSection "systems"
+                            , div
+                                [ class "rounded-md m-4"
+                                , attribute "role" "group"
+                                ]
+                                systems
+                            ]
+                     )
+                        ++ (case output.drv.name of
+                                Nothing ->
+                                    []
+
+                                Just name ->
+                                    [ mkSection "name"
+                                    , span [ class "m-4" ] [ text name ]
+                                    ]
+                           )
+                        ++ (case output.drv.description of
+                                Nothing ->
+                                    []
+
+                                Just description ->
+                                    [ mkSection "description"
+                                    , span [ class "m-4" ] [ text description ]
+                                    ]
+                           )
+                        ++ [ mkSection "type"
+                           , span [ class "m-4" ] [ text output.drv.type_ ]
+                           ]
+                    )
         ]
 
 
@@ -559,7 +587,7 @@ viewOutputSections model root =
                 Just output ->
                     output.section == section && output.output == name
 
-        mkSubsection section systems ( name, derivation ) =
+        mkItem section systems ( name, derivation ) =
             if
                 case model.searchQuery of
                     Nothing ->
@@ -591,7 +619,30 @@ viewOutputSections model root =
                         ]
                     ]
 
-        mkSection title maybeItems =
+        mkSubSection title attrs systems =
+            let
+                attrsList =
+                    Dict.toList attrs
+
+                ( attrsFinal, paginate ) =
+                    case ( List.length attrsList > 10, List.member title model.expandSections, model.searchQuery ) of
+                        ( True, False, Nothing ) ->
+                            ( List.take 10 attrsList
+                            , [ a
+                                    [ onClick (ExpandSection title)
+                                    , href "#outputs"
+                                    , class subsectionClasses
+                                    ]
+                                    [ text "... Show more" ]
+                              ]
+                            )
+
+                        _ ->
+                            ( attrsList, [] )
+            in
+            div [] (List.map (mkItem title systems) attrsFinal ++ paginate)
+
+        mkSection title maybeItems f =
             case maybeItems of
                 Nothing ->
                     div [] []
@@ -605,41 +656,38 @@ viewOutputSections model root =
                         , ul
                             [ class "mt-2 space-y-1"
                             ]
-                            (case Dict.get model.system items of
-                                Nothing ->
-                                    [ li [] [ text ("No outputs for " ++ model.system) ] ]
-
-                                Just attrs ->
-                                    let
-                                        attrsList =
-                                            Dict.toList attrs
-
-                                        ( attrsFinal, paginate ) =
-                                            case ( List.length attrsList > 10, List.member title model.expandSections, model.searchQuery ) of
-                                                ( True, False, Nothing ) ->
-                                                    ( List.take 10 attrsList
-                                                    , [ a
-                                                            [ onClick (ExpandSection title)
-                                                            , href "#outputs"
-                                                            , class subsectionClasses
-                                                            ]
-                                                            [ text "... Show more" ]
-                                                      ]
-                                                    )
-
-                                                _ ->
-                                                    ( attrsList, [] )
-                                    in
-                                    List.map (mkSubsection title (Dict.keys items)) attrsFinal ++ paginate
-                            )
+                            [ f items ]
                         ]
-    in
-    [ mkSection "packages" root.packages
-    , mkSection "legacyPackages" root.legacyPacakges
-    , mkSection "devShells" root.devShells
-    , mkSection "checks" root.checks
 
-    -- TODO: apps, templates, formatters, overlays, modules, configurations
+        mkSystemSection title maybeItems =
+            let
+                f items =
+                    case Dict.get model.system items of
+                        Nothing ->
+                            li [] [ text ("No outputs for " ++ model.system) ]
+
+                        Just attrs ->
+                            mkSubSection title attrs (Dict.keys items)
+            in
+            mkSection title maybeItems f
+
+        mkSimpleSection title maybeItems =
+            let
+                f items =
+                    mkSubSection title items []
+            in
+            mkSection title maybeItems f
+    in
+    [ mkSystemSection "packages" root.packages
+    , mkSystemSection "legacyPackages" root.legacyPacakges
+    , mkSystemSection "devShells" root.devShells
+    , mkSystemSection "checks" root.checks
+    , mkSystemSection "apps" root.apps
+    , mkSimpleSection "templates" root.templates
+    , mkSimpleSection "formatter" root.formatter
+    , mkSimpleSection "overlays" root.overlays
+    , mkSimpleSection "nixosModules" root.nixosModules
+    , mkSimpleSection "nixosConfigurations" root.nixosConfigurations
     ]
 
 
