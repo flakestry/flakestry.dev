@@ -55,8 +55,8 @@ type alias Model =
     , selectedOutput :
         Maybe
             { section : String
-            , output : String
-            , drv : Flakestry.FlakeSchema.Output
+            , attribute : String
+            , output : Flakestry.FlakeSchema.Output
             , systems : List String
             }
 
@@ -176,9 +176,15 @@ update msg model =
             , Effect.none
             )
 
-        SelectOutput section output drv systems ->
+        SelectOutput section attribute output systems ->
             ( { model
-                | selectedOutput = Just { section = section, output = output, drv = drv, systems = systems }
+                | selectedOutput =
+                    Just
+                        { section = section
+                        , output = output
+                        , attribute = attribute
+                        , systems = systems
+                        }
                 , hash = Just "outputs"
               }
             , Effect.none
@@ -517,7 +523,7 @@ viewOutput model =
                                 systems
                             ]
                      )
-                        ++ (case output.drv.name of
+                        ++ (case output.output.name of
                                 Nothing ->
                                     []
 
@@ -526,7 +532,7 @@ viewOutput model =
                                     , span [ class "m-4" ] [ text name ]
                                     ]
                            )
-                        ++ (case output.drv.description of
+                        ++ (case output.output.description of
                                 Nothing ->
                                     []
 
@@ -536,7 +542,7 @@ viewOutput model =
                                     ]
                            )
                         ++ [ mkSection "type"
-                           , span [ class "m-4" ] [ text output.drv.type_ ]
+                           , span [ class "m-4" ] [ text output.output.type_ ]
                            ]
                     )
         ]
@@ -585,7 +591,7 @@ viewOutputSections model root =
                     False
 
                 Just output ->
-                    output.section == section && output.output == name
+                    output.section == section && output.attribute == name
 
         mkItem section systems ( name, derivation ) =
             if

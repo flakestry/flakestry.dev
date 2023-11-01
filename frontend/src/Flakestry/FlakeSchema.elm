@@ -11,8 +11,8 @@ import Json.Decode.Pipeline as Pipeline
 
 type alias Output =
     { type_ : String
-    , name : Maybe String
     , description : Maybe String
+    , name : Maybe String
     }
 
 
