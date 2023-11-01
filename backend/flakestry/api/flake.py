@@ -1,11 +1,13 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from datetime import datetime
 from sqlmodel import Session, select, col
 from opensearchpy import OpenSearch
 from packaging.version import parse
+import anybadge
 
 from flakestry.sql import GitHubOwner, GitHubRepo, Release, get_session
 from flakestry.error import ValidationError
@@ -173,6 +175,25 @@ def toFlakeRelease(release: Release) -> FlakeRelease:
         created_at=release.created_at,
         readme=release.readme or "",
     )
+
+
+@router.get(
+    "/badge/flake/github/{owner}/{repo}",
+    responses={
+        422: {"model": ValidationError},
+    },
+    response_class=HTMLResponse,
+)
+def badge(owner: str, repo: str, session: Session = Depends(get_session)):
+    releases = read_repo(owner, repo, session)
+    latest = releases["releases"][-1]
+    badge = anybadge.Badge(
+        label="flakestry.dev",
+        value=latest.version,
+        default_color="darkblue",
+        num_padding_chars=1,
+    )
+    return badge.badge_svg_text
 
 
 @router.get(
