@@ -152,7 +152,7 @@ update msg model =
             )
 
         ChangeTab tab ->
-            ( { model | hash = Just tab }
+            ( { model | hash = Just tab, selectedOutput = Nothing }
             , Effect.none
             )
 
@@ -456,7 +456,6 @@ viewOutputs model flakeRelease =
                             [ class "flex flex-wrap -mb-px"
                             ]
                             [ tab "README" "readme" Octicons.file
-                            , tab "Outputs" "outputs" Octicons.fileDirectory
                             , tab "Inputs" "inputs" Octicons.package
                             ]
                         ]
