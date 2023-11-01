@@ -9,7 +9,7 @@ import Json.Decode as Decode exposing (Decoder, dict, field, maybe, string)
 
 
 type alias Derivation =
-    { description : String
+    { description : Maybe String
     , name : String
     , type_ : String
     }
@@ -44,7 +44,7 @@ type alias Root =
 derivationDecoder : Decoder Derivation
 derivationDecoder =
     Decode.map3 Derivation
-        (field "description" string)
+        (maybe (field "description" string))
         (field "name" string)
         (field "type" string)
 

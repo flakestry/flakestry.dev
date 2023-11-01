@@ -230,7 +230,129 @@ def main() -> None:
             commit="123",
             meta_data={},
             meta_data_errors="",
-            outputs={},
+            outputs={
+                "checks": {
+                    "x86_64-linux": {
+                        "pre-commit-check": {
+                            "name": "pre-commit-run",
+                            "type": "derivation",
+                        }
+                    }
+                },
+                "overlay": {"type": "nixpkgs-overlay"},
+                "packages": {
+                    "x86_64-linux": {
+                        "mlir": {"name": "mlir-6d43651", "type": "derivation"},
+                        "jless": {"name": "jless-v0.7.1", "type": "derivation"},
+                        "qprez": {"name": "r-qprez", "type": "derivation"},
+                        "daphne": {"name": "daphne-0.1", "type": "derivation"},
+                        "pajeng": {"name": "pajeng", "type": "derivation"},
+                        "starpu": {"name": "starpu", "type": "derivation"},
+                        "topo5k": {"name": "topo5k", "type": "derivation"},
+                        "vanidl": {"name": "python3.10-vanidl", "type": "derivation"},
+                        "ondes3d": {"name": "ondes3d", "type": "derivation"},
+                        "pajengr": {"name": "r-pajengr", "type": "derivation"},
+                        "recorder": {"name": "Recorder", "type": "derivation"},
+                        "snakefmt": {
+                            "name": "python3.10-snakefmt-v0.8.0",
+                            "type": "derivation",
+                        },
+                        "antlr-cpp": {"name": "antlr-cpp-master", "type": "derivation"},
+                        "freetype2": {"name": "freetype2", "type": "derivation"},
+                        "ggpattern": {"name": "r-ggpattern", "type": "derivation"},
+                        "madbench2": {"name": "MADbench2", "type": "derivation"},
+                        "pydarshan": {
+                            "name": "python3.10-pydarshan",
+                            "type": "derivation",
+                        },
+                        "globus-cli": {
+                            "name": "python3.10-globus-cli",
+                            "type": "derivation",
+                        },
+                        "globus-sdk": {
+                            "name": "python3.10-globus-sdk",
+                            "type": "derivation",
+                        },
+                        "httpimport": {
+                            "name": "python3.10-httpimport",
+                            "type": "derivation",
+                        },
+                        "facetscales": {"name": "r-facetscales", "type": "derivation"},
+                        "ior-simgrid": {
+                            "name": "ior-simgrid-3.3.0",
+                            "type": "derivation",
+                            "description": "Parallel file system I/O performance test",
+                        },
+                        "smpi_replay": {"name": "smpi_replay", "type": "derivation"},
+                        "darshan-perl": {
+                            "name": "perl-5.36.0-env",
+                            "type": "derivation",
+                            "description": "The standard implementation of the Perl 5 programmming language",
+                        },
+                        "darshan-util": {"name": "darshan-util", "type": "derivation"},
+                        "geomtextpath": {
+                            "name": "r-geomtextpath",
+                            "type": "derivation",
+                        },
+                        "recorder-viz": {
+                            "name": "python3.10-recorder-viz",
+                            "type": "derivation",
+                        },
+                        "hackernewsTUI": {
+                            "name": "hackernews-TUI-v0.7.1",
+                            "type": "derivation",
+                        },
+                        "myTextshaping": {
+                            "name": "r-textshaping",
+                            "type": "derivation",
+                        },
+                        "python-control": {
+                            "name": "python3.10-python-control-0.9.2",
+                            "type": "derivation",
+                        },
+                        "uga_thesis_rmd": {
+                            "name": "r-uga_thesis_rmd",
+                            "type": "derivation",
+                        },
+                        "darshan-runtime": {
+                            "name": "darshan-runtime",
+                            "type": "derivation",
+                        },
+                        "madbench2-darshan": {
+                            "name": "MADbench2",
+                            "type": "derivation",
+                        },
+                        "globus-connect-personal": {
+                            "name": "globus-connect-personal",
+                            "type": "derivation",
+                        },
+                    }
+                },
+                "devShells": {
+                    "x86_64-linux": {
+                        "check": {"name": "nix-shell", "type": "derivation"},
+                        "shell-R": {"name": "R", "type": "derivation"},
+                        "shell-lua": {"name": "lua", "type": "derivation"},
+                        "shell-julia": {"name": "julia", "type": "derivation"},
+                        "shell-python": {"name": "python", "type": "derivation"},
+                    }
+                },
+                "templates": {
+                    "C": {"type": "template", "description": "a simple C template"},
+                    "R": {"type": "template", "description": "R and friends"},
+                    "md": {
+                        "type": "template",
+                        "description": "a Markdown + Pandoc template",
+                    },
+                    "Rmd": {"type": "template", "description": "a RMarkdown template"},
+                    "QPrez": {"type": "template", "description": "a QPrez template"},
+                    "python": {
+                        "type": "template",
+                        "description": "a Python3.8 template",
+                    },
+                    "default": {"type": "template", "description": "basic shell"},
+                },
+            },
             outputs_errors="",
         )
 

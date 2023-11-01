@@ -507,7 +507,7 @@ viewOutput model =
                     , mkSection "name"
                     , span [ class "m-4" ] [ text output.drv.name ]
                     , mkSection "description"
-                    , span [ class "m-4" ] [ text output.drv.description ]
+                    , span [ class "m-4" ] [ text (Maybe.withDefault "" output.drv.description) ]
                     , mkSection "type"
                     , span [ class "m-4" ] [ text output.drv.type_ ]
                     ]
