@@ -187,7 +187,7 @@ def toFlakeRelease(release: Release) -> FlakeRelease:
 )
 def badge(owner: str, repo: str, session: Session = Depends(get_session)):
     releases = read_repo(owner, repo, session)
-    latest = releases["releases"][-1]
+    latest = releases["releases"][0]
     badge = anybadge.Badge(
         label="flakestry.dev",
         value=latest.version,
