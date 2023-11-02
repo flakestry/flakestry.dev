@@ -1,7 +1,7 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import Response
 from pydantic import BaseModel
 from datetime import datetime
 from sqlmodel import Session, select, col
@@ -181,8 +181,9 @@ def toFlakeRelease(release: Release) -> FlakeRelease:
     "/badge/flake/github/{owner}/{repo}",
     responses={
         422: {"model": ValidationError},
+        200: {"content": {"image/svg+xml": {}}},
     },
-    response_class=HTMLResponse,
+    response_class=Response,
 )
 def badge(owner: str, repo: str, session: Session = Depends(get_session)):
     releases = read_repo(owner, repo, session)
@@ -193,7 +194,7 @@ def badge(owner: str, repo: str, session: Session = Depends(get_session)):
         default_color="darkblue",
         num_padding_chars=1,
     )
-    return badge.badge_svg_text
+    return Response(content=badge.badge_svg_text, media_type="image/svg+xml")
 
 
 @router.get(
