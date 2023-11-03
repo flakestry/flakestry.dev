@@ -488,6 +488,9 @@ viewOutputs model flakeRelease =
                         Just "inputs" ->
                             viewInputs release
 
+                        Just "outputs" ->
+                            viewOutput model
+
                         _ ->
                             File.defaultOptions
                                 |> File.fileName "README"
