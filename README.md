@@ -22,7 +22,13 @@ Maintainers: [@domenkozar](https://github.com/domenkozar).
    direnv allow
    ```
 
-4. Start the development server:
+4. Generate the Elm API:
+
+    ```bash
+    devenv shell generate-elm-api
+    ```
+
+5. Start the development server:
 
    ```bash
    devenv up
