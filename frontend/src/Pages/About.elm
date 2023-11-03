@@ -1,4 +1,4 @@
-module Pages.About exposing (..)
+module Pages.About exposing (page)
 
 import Flakestry.Layout
 import Html exposing (..)

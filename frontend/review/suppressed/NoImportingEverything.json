@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "automatically created by": "elm-review suppress",
+  "learn more": "elm-review suppress --help",
+  "suppressions": [
+    { "count": 3, "filePath": "src/Components/Search.elm" },
+    { "count": 2, "filePath": "src/Components/FlakeCard.elm" },
+    { "count": 2, "filePath": "src/Flakestry/Layout.elm" },
+    { "count": 2, "filePath": "src/Pages/About.elm" },
+    { "count": 2, "filePath": "src/Pages/Flake/Github/Org_.elm" },
+    { "count": 2, "filePath": "src/Pages/Flake/Github/Org_/Repo_/Version_.elm" },
+    { "count": 2, "filePath": "src/Pages/Home_.elm" },
+    { "count": 2, "filePath": "src/Pages/Publish.elm" },
+    { "count": 1, "filePath": "src/Components/File.elm" }
+  ]
+}

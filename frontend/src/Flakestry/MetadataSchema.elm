@@ -1,4 +1,4 @@
-module Flakestry.MetadataSchema exposing (..)
+module Flakestry.MetadataSchema exposing (Locked, Locks, Node, RootData, decodeRootInputsUrl)
 
 import Dict exposing (Dict)
 import Json.Decode as Decode exposing (Decoder, Value, dict, field, map, map2, map4, maybe, string)

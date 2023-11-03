@@ -17,7 +17,7 @@ import View exposing (View)
 
 
 page : Shared.Model -> Route { org : String } -> Page Model Msg
-page shared route =
+page _ route =
     Page.new
         { init = init route.params.org
         , update = update
@@ -65,7 +65,7 @@ update msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 

@@ -1,4 +1,4 @@
-module Components.File exposing (..)
+module Components.File exposing (Options, baseUrl, class, contents, defaultOptions, file, fileName, language, rawBaseUrl, setCopyableContents, view)
 
 import Html exposing (..)
 import Html.Attributes as HA

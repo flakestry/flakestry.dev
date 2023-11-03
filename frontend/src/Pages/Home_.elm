@@ -5,7 +5,7 @@ import Api.Data as Api
 import Api.Request.Default as Api
 import Components.FlakeCard
 import Components.Search as Search
-import Dict
+import Dict exposing (Dict)
 import Effect exposing (Effect)
 import Flakestry.Layout
 import Html exposing (..)
@@ -20,7 +20,7 @@ import View exposing (View)
 
 
 page : Shared.Model -> Route () -> Page Model Msg
-page shared route =
+page _ route =
     Page.new
         { init = init route
         , update = update route
@@ -42,14 +42,17 @@ type alias Model =
 init : Route () -> () -> ( Model, Effect Msg )
 init route () =
     let
+        newSearchState : Search.Model
         newSearchState =
             Search.init (Dict.get "q" route.query)
 
+        newModel : Model
         newModel =
             { searchState = newSearchState
             , latestFlakesResponse = RemoteData.NotAsked
             }
 
+        newEffect : Effect Msg
         newEffect =
             Effect.batch
                 [ -- Load the latest flakes
@@ -96,6 +99,7 @@ update route msg model =
 
         HandleFlakesResponse response ->
             let
+                newModel : Model
                 newModel =
                     { model | latestFlakesResponse = RemoteData.fromResult response }
             in
@@ -109,7 +113,7 @@ update route msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 
@@ -120,6 +124,7 @@ subscriptions model =
 view : Model -> View Msg
 view model =
     let
+        newTitle : String
         newTitle =
             case model.searchState.query of
                 Nothing ->
@@ -187,6 +192,7 @@ viewFlakeResults response =
     case response of
         RemoteData.Success flakes ->
             let
+                viewFlakes : List (Html msg)
                 viewFlakes =
                     if flakes.count == 0 then
                         [ div [ class "mt-12" ] [] ]
@@ -225,6 +231,7 @@ getSearchCount response =
 pushQueryToRoute : Search.Model -> Search.Msg -> Route r -> String -> Effect msg
 pushQueryToRoute searchState msg route queryParam =
     let
+        newQuery : Dict String String
         newQuery =
             case msg of
                 Search.Search ->
