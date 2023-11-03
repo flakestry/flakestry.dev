@@ -1,4 +1,4 @@
-module Flakestry.FlakeSchema exposing (..)
+module Flakestry.FlakeSchema exposing (OptionalOutput, Output, Root, decodeJson)
 
 import Dict exposing (Dict)
 import Json.Decode as Decode exposing (Decoder, dict, field, maybe, string)
@@ -50,6 +50,7 @@ outputDecoder =
         (maybe (field "name" string))
 
 
+optionalMaybe : String -> Decoder a -> Decoder (Maybe a -> b) -> Decoder b
 optionalMaybe name decoder =
     Pipeline.optional name (Decode.map Just decoder) Nothing
 

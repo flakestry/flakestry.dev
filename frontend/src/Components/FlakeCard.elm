@@ -1,8 +1,7 @@
-module Components.FlakeCard exposing (..)
+module Components.FlakeCard exposing (FlakeCard, view)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
 import Octicons
 import Route.Path
 

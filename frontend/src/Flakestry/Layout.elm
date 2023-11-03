@@ -1,4 +1,4 @@
-module Flakestry.Layout exposing (..)
+module Flakestry.Layout exposing (viewBody, viewFooter, viewNav)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)

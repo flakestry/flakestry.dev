@@ -13,10 +13,10 @@ import Api.Data as Api
 import Api.Request.Default as Api
 import Api.Time as ApiTime
 import Components.File as File
-import Dict
+import Dict exposing (Dict)
 import Dropdown
 import Effect exposing (Effect)
-import Flakestry.FlakeSchema
+import Flakestry.FlakeSchema exposing (OptionalOutput)
 import Flakestry.Layout
 import Flakestry.MetadataSchema
 import Html exposing (..)
@@ -26,7 +26,7 @@ import Http
 import Json.Decode
 import Octicons
 import Page exposing (Page)
-import RemoteData exposing (WebData)
+import RemoteData exposing (RemoteData, WebData)
 import Route exposing (Route)
 import Route.Path
 import Shared
@@ -112,9 +112,11 @@ update msg model =
     case msg of
         HandleGetRepoResponse response ->
             let
+                data : RemoteData Http.Error Api.RepoResponse
                 data =
                     RemoteData.fromResult response
 
+                maybeVersion : Maybe String
                 maybeVersion =
                     case ( model.version, data ) of
                         ( Just version, _ ) ->
@@ -139,6 +141,7 @@ update msg model =
 
         HandleGetVersionResponse response ->
             let
+                data : RemoteData Http.Error Api.Release
                 data =
                     RemoteData.fromResult response
             in
@@ -232,7 +235,7 @@ viewRemoteData webdata viewData =
                     ]
             }
 
-        RemoteData.Failure err ->
+        RemoteData.Failure _ ->
             { title = "flakestry - failed"
             , body =
                 Flakestry.Layout.viewBody
@@ -251,6 +254,7 @@ view model =
     viewRemoteData model.repoResponse
         (\repo ->
             let
+                maybeRelease : Maybe Api.FlakeRelease
                 maybeRelease =
                     case model.version of
                         Nothing ->
@@ -343,12 +347,15 @@ viewOutputs model flakeRelease =
     remoteRelease model
         (\release ->
             let
+                outputs : Result String Flakestry.FlakeSchema.Root
                 outputs =
                     parseOutputs release
 
+                baseUrl : String
                 baseUrl =
                     "https://github.com/" ++ flakeRelease.owner ++ "/" ++ flakeRelease.repo
 
+                revision : String
                 revision =
                     if flakeRelease.commit == "" then
                         "HEAD"
@@ -356,8 +363,10 @@ viewOutputs model flakeRelease =
                     else
                         flakeRelease.commit
 
+                tab : String -> String -> (Octicons.Options -> Html Msg) -> Html Msg
                 tab name hash icon =
                     let
+                        isActive : Bool
                         isActive =
                             case model.hash of
                                 Nothing ->
@@ -488,6 +497,7 @@ viewOutput model =
 
             Just output ->
                 let
+                    mkSystem : String -> Html Msg
                     mkSystem system =
                         button
                             [ type_ "button"
@@ -505,6 +515,7 @@ viewOutput model =
                             ]
                             [ text system ]
 
+                    mkSection : String -> Html msg
                     mkSection title =
                         div [ class "text-lg font-semibold mt-4" ] [ text title ]
                 in
@@ -550,6 +561,7 @@ viewOutput model =
 viewInputs : Api.Release -> Html Msg
 viewInputs release =
     let
+        inputs : Dict String String
         inputs =
             case release.metaData of
                 Nothing ->
@@ -558,6 +570,7 @@ viewInputs release =
                 Just i ->
                     Flakestry.MetadataSchema.decodeRootInputsUrl i
 
+        viewInput : ( String, String ) -> Html msg
         viewInput ( name, url ) =
             tr []
                 [ td [ class "border px-4 py-2" ] [ text name ]
@@ -581,9 +594,11 @@ viewInputs release =
 viewOutputSections : Model -> Flakestry.FlakeSchema.Root -> List (Html Msg)
 viewOutputSections model root =
     let
+        subsectionClasses : String
         subsectionClasses =
             "flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-blue-900 hover:text-white"
 
+        isSelectedOutput : String -> String -> Bool
         isSelectedOutput section name =
             case model.selectedOutput of
                 Nothing ->
@@ -592,6 +607,7 @@ viewOutputSections model root =
                 Just output ->
                     output.section == section && output.attribute == name
 
+        mkItem : String -> List String -> ( String, Flakestry.FlakeSchema.Output ) -> Html Msg
         mkItem section systems ( name, derivation ) =
             if
                 case model.searchQuery of
@@ -624,8 +640,10 @@ viewOutputSections model root =
                         ]
                     ]
 
+        mkSubSection : String -> Dict String Flakestry.FlakeSchema.Output -> List String -> Html Msg
         mkSubSection title attrs systems =
             let
+                attrsList : List ( String, Flakestry.FlakeSchema.Output )
                 attrsList =
                     Dict.toList attrs
 
@@ -647,6 +665,7 @@ viewOutputSections model root =
             in
             div [] (List.map (mkItem title systems) attrsFinal ++ paginate)
 
+        mkSection : String -> Maybe a -> (a -> Html msg) -> Html msg
         mkSection title maybeItems f =
             case maybeItems of
                 Nothing ->
@@ -664,8 +683,10 @@ viewOutputSections model root =
                             [ f items ]
                         ]
 
+        mkSystemSection : String -> OptionalOutput (Dict String Flakestry.FlakeSchema.Output) -> Html Msg
         mkSystemSection title maybeItems =
             let
+                f : Dict String (Dict String Flakestry.FlakeSchema.Output) -> Html Msg
                 f items =
                     case Dict.get model.system items of
                         Nothing ->
@@ -676,8 +697,10 @@ viewOutputSections model root =
             in
             mkSection title maybeItems f
 
+        mkSimpleSection : String -> Maybe (Dict String Flakestry.FlakeSchema.Output) -> Html Msg
         mkSimpleSection title maybeItems =
             let
+                f : Dict String Flakestry.FlakeSchema.Output -> Html Msg
                 f items =
                     mkSubSection title items []
             in
@@ -744,19 +767,20 @@ thisRoute model =
 viewVersionDropdown : Model -> List Api.FlakeRelease -> Api.FlakeRelease -> Html Msg
 viewVersionDropdown model releases release =
     let
+        tag : Html msg
         tag =
             Octicons.defaultOptions
                 |> Octicons.color "currentColor"
                 |> Octicons.class "inline mr-2"
                 |> Octicons.tag
 
-        mkVersion =
-            \r ->
-                a
-                    [ class "p-2 hover:underline hover:cursor-pointer"
-                    , Route.Path.href (thisRoute { org = r.owner, repo = r.repo, version = Just r.version })
-                    ]
-                    [ tag, text r.version ]
+        mkVersion : Api.FlakeRelease -> Html msg
+        mkVersion r =
+            a
+                [ class "p-2 hover:underline hover:cursor-pointer"
+                , Route.Path.href (thisRoute { org = r.owner, repo = r.repo, version = Just r.version })
+                ]
+                [ tag, text r.version ]
     in
     Dropdown.dropdown
         { identifier = "version-dropdown"

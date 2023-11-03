@@ -1,4 +1,4 @@
-module Components.Search exposing (..)
+module Components.Search exposing (Model, Msg(..), init, update, view)
 
 import Api
 import Api.Data as Api
@@ -47,9 +47,11 @@ update msg model =
     case msg of
         SetQuery query ->
             let
+                searchMsg : Msg
                 searchMsg =
                     Search |> Debouncer.provideInput |> Debounce
 
+                newQuery : Maybe String
                 newQuery =
                     if String.isEmpty query then
                         Nothing
@@ -64,6 +66,7 @@ update msg model =
 
         Search ->
             let
+                searchCmd : Effect Msg
                 searchCmd =
                     case model.query of
                         Nothing ->
@@ -88,9 +91,11 @@ update msg model =
                 ( subModel, subCmd, emittedMsg ) =
                     Debouncer.update subMsg model.debouncer
 
+                mappedCmd : Cmd Msg
                 mappedCmd =
                     Cmd.map Debounce subCmd
 
+                updatedModel : Model
                 updatedModel =
                     { model | debouncer = subModel }
             in
