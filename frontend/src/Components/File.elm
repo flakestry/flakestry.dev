@@ -96,19 +96,27 @@ view options =
                 :: (options.copyableContents
                         |> Maybe.map
                             (\copyableContents ->
-                                [ button
-                                    [ HA.class "ml-2 clipboard inline-flex items-center text-sm text-white font-medium pl-2 pr-3 py-2 shadow-sm rounded bg-blue-900 hover:bg-blue-600"
-                                    , HA.type_ "button"
-                                    , HA.attribute "data-clipboard-text" copyableContents
-                                    ]
-                                    [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.size 15 |> Octicons.class "inline" |> Octicons.clippy
-                                    , span [ HA.class "ml-2" ] [ text "Copy" ]
-                                    ]
-                                ]
+                                [ viewCopyButton copyableContents ]
                             )
                         |> Maybe.withDefault []
                    )
         , file options
+        ]
+
+
+viewCopyButton : String -> Html msg
+viewCopyButton copyableContents =
+    button
+        [ HA.class "ml-2 clipboard inline-flex items-center text-sm text-white font-medium pl-2 pr-3 py-2 shadow-sm rounded bg-blue-900 hover:bg-blue-600"
+        , HA.type_ "button"
+        , HA.attribute "data-clipboard-text" copyableContents
+        ]
+        [ Octicons.defaultOptions
+            |> Octicons.color "currentColor"
+            |> Octicons.size 15
+            |> Octicons.class "inline"
+            |> Octicons.clippy
+        , span [ HA.class "ml-2" ] [ text "Copy" ]
         ]
 
 

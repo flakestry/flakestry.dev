@@ -18,4 +18,12 @@ export const flags = ({ env }) => {
 // messages from Elm
 export const onReady = ({ app, env }) => {
     const clipboard = new Clipboard('.clipboard');
+
+    clipboard.on('success', function(e) {
+        const el = document.createElement('span');
+        el.className = 'bg-gray-100 border border-gray-300 p-1 text-sm text-gray-900 rounded-md absolute m-4 mx-auto';
+        el.innerText = 'Copied!';
+        e.trigger.appendChild(el);
+        e.clearSelection();
+    });
 }

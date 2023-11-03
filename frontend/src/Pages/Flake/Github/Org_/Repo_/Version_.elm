@@ -284,6 +284,10 @@ view model =
 
 viewRelease : Model -> List Api.FlakeRelease -> Api.FlakeRelease -> Html Msg
 viewRelease model releases release =
+    let
+        githubLink =
+            "https://github.com/" ++ release.owner ++ "/" ++ release.repo
+    in
     div [ class "container max-w-5xl px-4" ]
         [ div [ class "pt-16 pb-8 leading-6" ]
             [ h2 [ class "inline-flex items-center font-semibold text-2xl" ]
@@ -300,7 +304,7 @@ viewRelease model releases release =
                     ]
                     [ text release.repo ]
                 , a
-                    [ href ("https://github.com/" ++ release.owner ++ "/" ++ release.repo)
+                    [ href githubLink
                     , title "View source code on GitHub"
                     ]
                     [ Octicons.defaultOptions |> Octicons.color "currentColor" |> Octicons.class "inline ml-4" |> Octicons.markGithub ]
@@ -343,6 +347,12 @@ viewOutputs model flakeRelease =
     remoteRelease model
         (\release ->
             let
+                badgeMarkdown =
+                    "[![flakestry.dev](https://flakestry.dev" ++ Route.Path.toString model.route ++ ")](https://flakestry.dev" ++ badgeImage ++ ")"
+
+                badgeImage =
+                    "/api/badge/flake/github/" ++ model.org ++ "/" ++ model.repo
+
                 outputs =
                     parseOutputs release
 
@@ -459,12 +469,24 @@ viewOutputs model flakeRelease =
                             , tab "Inputs" "inputs" Octicons.package
                             ]
                         ]
+                    , span [ class "ml-4 mt-4 inline-block" ]
+                        [ img [ src badgeImage, class "inline-block" ] []
+                        ]
+                    , button
+                        [ class "ml-2 clipboard inline-flex text-sm text-gray-900 font-medium p-2 shadow-sm rounded border border-gray-300 hover:bg-blue-600 hover:text-white hover:border-white"
+                        , type_ "button"
+                        , title "Copy badge markdown to clipboard"
+                        , attribute "data-clipboard-text" badgeMarkdown
+                        ]
+                        [ Octicons.defaultOptions
+                            |> Octicons.color "currentColor"
+                            |> Octicons.size 10
+                            |> Octicons.class "inline"
+                            |> Octicons.clippy
+                        ]
                     , case model.hash of
                         Just "inputs" ->
                             viewInputs release
-
-                        Just "outputs" ->
-                            viewOutput model
 
                         _ ->
                             File.defaultOptions
