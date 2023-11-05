@@ -26,7 +26,7 @@ about =
 
 page : View msg
 page =
-    { title = "flakestry - Publish"
+    { title = "flakestry - About"
     , body =
         Flakestry.Layout.viewBody
             [ Flakestry.Layout.viewNav
