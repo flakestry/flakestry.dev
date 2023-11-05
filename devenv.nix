@@ -55,6 +55,8 @@ in
     npm.install.enable = true;
   };
 
+  languages.typescript.enable = true;
+
   languages.elm.enable = true;
 
   services.opensearch.enable = !config.container.isBuilding;
