@@ -15,7 +15,8 @@ from flakestry.sql import GitHubOwner, GitHubRepo, Release, get_session
 
 
 class Publish(BaseModel):
-    version: str
+    ref: str | None
+    version: str | None
     metadata: dict[str, Any] | None
     metadata_errors: str | None
     readme: str | None
@@ -46,18 +47,47 @@ def publish(
     # content={"message": "Private repositories are not supported, \
     # see https://github.com/flakestry/flakestry.dev/issues"})
 
+    github_headers = {
+        "Authorization": f"Bearer {github_token}",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Accept": "application/vnd.github+json",
+    }
+
+    owner_name, repository_name = token.repository.split("/")
+    if publish.ref:
+        ref = publish.ref
+    elif publish.version:
+        ref = f"refs/tags/{publish.version}"
+    else:
+        ref = "HEAD"
+
+    # Get info on the commit to be published
+    commit_response = requests.get(
+        f"https://api.github.com/repos/{owner_name}/{repository_name}/commits/{ref}",
+        headers=github_headers,
+    )
+    commit_response.raise_for_status()
+    commit_json = commit_response.json()
+    commit_sha = commit_json["sha"]
+    commit_date = commit_json["commit"]["committer"]["date"]
+
+    # Validate & parse version
+    if publish.version:
+        given_version = publish.version
+    elif publish.ref and publish.ref.startswith("refs/tags/"):
+        given_version = publish.ref.removeprefix("refs/tags/")
+    else:
+        given_version = f"v0.1.{re.sub(r'[^0-9]', '', commit_date)}"
+
     version_regex = r"^v?([0-9]+\.[0-9]+\.?[0-9]*$)"
-    version = re.search(version_regex, publish.version)
+    version = re.search(version_regex, given_version)
     if not version:
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
-            content={
-                "message": f"{publish.version} doesn't match regex {version_regex}"
-            },
+            content={"message": f"{given_version} doesn't match regex {version_regex}"},
         )
     else:
         version = version.groups()[0]
-    owner_name, repository_name = token.repository.split("/")
 
     # Create owner if it doesn't exist
     owner = session.exec(
@@ -81,37 +111,16 @@ def publish(
         session.commit()
         session.refresh(repo)
 
-    # 400 if version already exists
+    # 409 if version already exists
     if session.exec(
         select(Release)
         .where(Release.version == version)
         .where(Release.repo_id == repo.id)
     ).first():
         return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={"message": f"Version {publish.version} already exists"},
+            status_code=status.HTTP_409_CONFLICT,
+            content={"message": f"Version {version} already exists"},
         )
-
-    github_headers = {
-        "Authorization": f"Bearer {github_token}",
-        "X-GitHub-Api-Version": "2022-11-28",
-        "Accept": "application/vnd.github+json",
-    }
-    ref_response = requests.get(
-        f"https://api.github.com/repos/{owner_name}/{repository_name}/git/ref/tags/{publish.version}",
-        headers=github_headers,
-    )
-    ref_response.raise_for_status()
-    commit = ref_response.json()["object"]["sha"]
-
-    if ref_response.json()["object"]["type"] == "tag":
-        # now we get the commit sha
-        tag_response = requests.get(
-            f"https://api.github.com/repos/{owner_name}/{repository_name}/git/tags/{commit}",
-            headers=github_headers,
-        )
-        tag_response.raise_for_status()
-        commit = tag_response.json()["object"]["sha"]
 
     # index README
     try:
@@ -119,7 +128,7 @@ def publish(
     except Exception:
         description = None
 
-    path = f"{owner_name}/{repository_name}/{commit}/{publish.readme}"
+    path = f"{owner_name}/{repository_name}/{commit_sha}/{publish.readme}"
     if publish.readme:
         readme_response = requests.get(
             f"https://raw.githubusercontent.com/{path}", headers=github_headers
@@ -129,12 +138,13 @@ def publish(
     else:
         readme = None
 
+    # Do release
     release = Release(
         repo_id=repo.id,
         version=version,
         readme_filename=publish.readme,
         readme=readme,
-        commit=commit,
+        commit=commit_sha,
         description=description,
         meta_data=publish.metadata,
         meta_data_errors=publish.metadata_errors,
@@ -145,6 +155,7 @@ def publish(
     session.commit()
     session.refresh(release)
 
+    # Index release
     document = {
         "description": description,
         "readme": readme,
