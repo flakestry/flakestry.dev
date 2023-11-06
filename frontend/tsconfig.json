@@ -1,0 +1,13 @@
+{
+  "files": [
+    "src/interop.ts"
+  ],
+  "compilerOptions": {
+    "lib": ["es6", "dom"],
+
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  }
+}

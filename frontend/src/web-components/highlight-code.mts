@@ -5,12 +5,16 @@ import DOMPurify from 'dompurify';
 import hljs from 'highlight.js';
 
 window.customElements.define('highlight-code', class extends HTMLElement {
+  // Cached instances
+  private _marked: Marked | undefined;
+  private _DOMPurify: DOMPurify.DOMPurifyI | undefined;
+
   constructor() { super(); }
 
   connectedCallback() { this.render(); }
 
   render() {
-    const code = this.getAttribute('code');
+    const code = this.getAttribute('code') ?? '';
     const lang = this.getAttribute('language') ?? 'markdown';
     const baseUrl = this.getAttribute('baseUrl') ?? '';
     const rawBaseUrl = this.getAttribute('rawBaseUrl') ?? '';
@@ -25,46 +29,43 @@ window.customElements.define('highlight-code', class extends HTMLElement {
     }
   }
 
-  parseCode(code, lang) {
+  parseCode(code: string, lang: string) {
     const sanitized = DOMPurify.sanitize(this.highlightCode(code, lang));
 
     this.classList.add('block', 'whitespace-pre', 'hljs', `language-${lang}`);
     this.innerHTML = sanitized;
   }
 
-  parseMarkdown(markdown, baseUrl = '', rawBaseUrl = '') {
+  async parseMarkdown(markdown: string, baseUrl = '', rawBaseUrl = '') {
     if (baseUrl) {
       this.DOMPurify.addHook('afterSanitizeAttributes', function(node) {
-        if (node.hasAttribute('href')) {
-          const url = new URL(
-            removeRootPath(node.getAttribute('href')),
-            baseUrl,
-          );
-          node.setAttribute('href', url.toString());
+        let href = node.getAttribute('href');
+        if (href !== null) {
+          const newHref = new URL(removeRootPath(href), baseUrl);
+          node.setAttribute('href', newHref.toString());
         }
 
-        if (node.hasAttribute('src')) {
-          const src = new URL(
-            removeRootPath(node.getAttribute('src')),
-            rawBaseUrl || baseUrl,
-          );
-          node.setAttribute('src', src.toString());
+        let src = node.getAttribute('src');
+        if (src !== null) {
+          const newSrc = new URL(removeRootPath(src), rawBaseUrl || baseUrl);
+          node.setAttribute('src', newSrc.toString());
         }
       });
     }
 
-    const sanitized = this.DOMPurify.sanitize(this.marked.parse(markdown));
+    const parsed = await this.marked.parse(markdown);
+    const sanitized = this.DOMPurify.sanitize(parsed);
 
     this.classList.add('block');
     this.innerHTML = sanitized;
   }
 
-  highlightCode(code, lang) {
+  highlightCode(code: string, lang: string): string {
     const language = hljs.getLanguage(lang) ? lang : 'plaintext';
     return hljs.highlight(code, { language, ignoreIllegals: true }).value;
   }
 
-  get marked() {
+  get marked(): Marked {
     if (this._marked) {
       return this._marked;
     }
@@ -80,7 +81,7 @@ window.customElements.define('highlight-code', class extends HTMLElement {
     return this._marked;
   }
 
-  get DOMPurify() {
+  get DOMPurify(): DOMPurify.DOMPurifyI {
     if (this._DOMPurify) {
       return this._DOMPurify;
     }
@@ -91,7 +92,7 @@ window.customElements.define('highlight-code', class extends HTMLElement {
   }
 })
 
-function removeRootPath(path = '') {
+function removeRootPath(path = ''): string {
   if (path.startsWith('/')) {
     return path.substring(1);
   }
