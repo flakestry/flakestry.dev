@@ -75,12 +75,17 @@ def publish(
     commit_date = commit_json["commit"]["committer"]["date"]
 
     # Validate & parse version
+    datetime = re.sub(r"[^0-9]", "", commit_date)
     if publish.version:
-        given_version = publish.version
+        given_version = publish.version.format(
+            datetime=datetime,
+            date=datetime[:8],
+            time=datetime[8:],
+        )
     elif publish.ref and publish.ref.startswith("refs/tags/"):
         given_version = publish.ref.removeprefix("refs/tags/")
     else:
-        given_version = f"v0.1.{re.sub(r'[^0-9]', '', commit_date)}"
+        given_version = f"v0.1.{datetime}"
 
     version_regex = r"^v?([0-9]+\.[0-9]+\.?[0-9]*$)"
     version = re.search(version_regex, given_version)
