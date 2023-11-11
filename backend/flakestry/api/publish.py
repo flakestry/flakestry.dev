@@ -59,7 +59,10 @@ def publish(
     elif publish.version:
         ref = f"refs/tags/{publish.version}"
     else:
-        ref = "HEAD"
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"message": 'Neither "ref" nor "version" were provided'},
+        )
 
     # Get info on the commit to be published
     commit_response = requests.get(
