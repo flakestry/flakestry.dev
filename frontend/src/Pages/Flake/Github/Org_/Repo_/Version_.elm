@@ -348,7 +348,7 @@ viewOutputs model flakeRelease =
         (\release ->
             let
                 badgeMarkdown =
-                    "[![flakestry.dev](https://flakestry.dev" ++ Route.Path.toString model.route ++ ")](https://flakestry.dev" ++ badgeImage ++ ")"
+                    "[![flakestry.dev](https://flakestry.dev" ++ badgeImage ++ ")](https://flakestry.dev" ++ Route.Path.toString model.route ++ ")"
 
                 badgeImage =
                     "/api/badge/flake/github/" ++ model.org ++ "/" ++ model.repo
