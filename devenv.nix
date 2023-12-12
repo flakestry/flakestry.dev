@@ -22,6 +22,7 @@ let
     generate-elm-api
     pushd frontend
     elm-land build
+    inject-noscript-tag
     popd
     devenv container ${env} --copy
     flyctl deploy --vm-memory 1024 -a flakestry-${env} \
@@ -121,6 +122,10 @@ in
     # Replace cross-origin requests with requests to the same host
     sed -i "s#Url.Builder.crossOrigin req.basePath req.pathParams#Url.Builder.absolute (\"api\" :: req.pathParams)#g" \
       ${config.devenv.root}/frontend/generated-api/src/Api.elm
+  '';
+  scripts.inject-noscript-tag.exec = ''
+    sed -i "s|.*placeholder-no-script-tag.*|<noscript><div>Cannot use Flaskestry.dev without javascript</div></noscript>|" \
+      ${config.devenv.root}/frontend/dist/index.html
   '';
 
   processes = {
