@@ -59,6 +59,8 @@ in
 
   languages.elm.enable = true;
 
+  languages.rust.enable = true;
+
   services.opensearch.enable = !config.container.isBuilding;
   services.postgres.enable = !config.container.isBuilding;
   services.caddy.enable = true;
