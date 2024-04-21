@@ -63,7 +63,11 @@ in
 
   languages.elm.enable = true;
 
-  languages.rust.enable = true;
+  languages.rust = {
+    enable = true;
+    # https://github.com/launchbadge/sqlx/blob/main/FAQ.md#what-versions-of-rust-does-sqlx-support-what-is-sqlxs-msrv
+    channel = "stable";
+  };
 
   services.opensearch.enable = !config.container.isBuilding;
   services.postgres.enable = !config.container.isBuilding;

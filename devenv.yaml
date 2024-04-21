@@ -8,3 +8,8 @@ inputs:
         follows: nixpkgs
   mk-shell-bin:
     url: github:rrbutani/nix-mk-shell-bin
+  fenix:
+    url: github:nix-community/fenix
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
