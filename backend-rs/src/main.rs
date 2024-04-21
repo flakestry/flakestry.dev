@@ -6,16 +6,24 @@ use axum::{
     Router,
 };
 use opensearch::OpenSearch;
+use sqlx::{postgres::PgPoolOptions, PgPool};
 
 struct AppState {
     opensearch: OpenSearch,
+    pool: PgPool,
 }
 
 #[tokio::main]
 async fn main() {
+    // TODO: read PG and OS host names from env variables
     // build our application with a single route
+    let pool = PgPoolOptions::new()
+        .connect("postgres://localhost:5432")
+        .await
+        .unwrap();
     let state = Arc::new(AppState {
         opensearch: OpenSearch::default(),
+        pool,
     });
     let api = Router::new()
         .route("/flake", get(get_flake))
