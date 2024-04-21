@@ -40,6 +40,10 @@ in
     pkgs.cloudflared
     pkgs.openapi-generator-cli
     pkgs.nodePackages.pyright
+  ] ++ lib.optionals pkgs.stdenv.isDarwin [
+    pkgs.darwin.CF
+    pkgs.darwin.Security
+    pkgs.darwin.configd
   ];
 
   # https://github.com/cachix/devenv/pull/745
