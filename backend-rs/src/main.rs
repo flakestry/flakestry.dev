@@ -40,15 +40,21 @@ impl IntoResponse for AppError {
 
 #[derive(serde::Serialize)]
 struct GetFlakeResponse {
-    releases: Vec<Release>,
+    releases: Vec<FlakeRelease>,
     count: usize,
     query: Option<String>,
 }
 
 #[derive(serde::Serialize, sqlx::FromRow)]
-struct Release {
+struct FlakeRelease {
+    #[serde(skip_serializing)]
     id: i64,
-    readme: String,
+    owner: String,
+    repo: String,
+    version: String,
+    description: String,
+    // TODO: Change to DateTime?
+    created_at: String,
 }
 
 #[tokio::main]
@@ -113,14 +119,25 @@ async fn get_flake(
             );
         }
         // TODO: This query is actually a join between different tables
-        let mut releases = sqlx::query_as::<_, Release>("SELECT * FROM release WHERE id IN (?)")
-            .bind(hits.keys().cloned().collect::<Vec<i64>>())
-            .fetch_all(&state.pool)
-            .await?;
+        let mut releases = sqlx::query_as::<_, FlakeRelease>(
+            "SELECT release.id AS id, \
+                githubowner.name AS owner, \
+                githubrepo.name AS repo, \
+                release.version AS version, \
+                release.description AS description, \
+                release.created_at AS created_at \
+                FROM release \
+                INNER JOIN githubrepo ON githubrepo.id = release.repo_id \
+                INNER JOIN githubowner ON githubowner.id = githubrepo.owner_id \
+                WHERE release.id IN (?)",
+        )
+        .bind(hits.keys().cloned().collect::<Vec<i64>>())
+        .fetch_all(&state.pool)
+        .await?;
         releases.sort_by(|a, b| hits[&b.id].cmp(&hits[&a.id]));
         releases
     } else {
-        sqlx::query_as::<_, Release>("SELECT * FROM release ORDER BY created_at LIMIT 100")
+        sqlx::query_as::<_, FlakeRelease>("SELECT * FROM release ORDER BY created_at LIMIT 100")
             .fetch_all(&state.pool)
             .await?
     };
