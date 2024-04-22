@@ -1,16 +1,32 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use axum::{
-    extract::State,
+    extract::{Query, State},
+    response::{ErrorResponse, IntoResponse},
     routing::{get, post},
     Router,
 };
-use opensearch::OpenSearch;
+use opensearch::{OpenSearch, SearchParts};
+use serde_json::json;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
 struct AppState {
     opensearch: OpenSearch,
     pool: PgPool,
+}
+
+enum AppError {}
+
+impl IntoResponse for AppError {
+    fn into_response(self) -> axum::response::Response {
+        todo!()
+    }
+}
+
+impl From<opensearch::Error> for AppError {
+    fn from(value: opensearch::Error) -> Self {
+        todo!()
+    }
 }
 
 #[tokio::main]
@@ -36,9 +52,34 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
-async fn get_flake(State(state): State<Arc<AppState>>) -> &'static str {
-    let opensearch = &state.opensearch;
-    "Flake"
+async fn get_flake(
+    State(state): State<Arc<AppState>>,
+    Query(params): Query<HashMap<String, String>>,
+) -> Result<(), AppError> {
+    if let Some(q) = params.get("q") {
+        let response = &state
+            .opensearch
+            .search(SearchParts::Index(&["opensearch_index"]))
+            .size(10)
+            .body(json!({
+                "query": {
+                    "multi_match": {
+                        "query": q,
+                        "fuzziness": "AUTO",
+                        "fields": [
+                            "description^2",
+                            "readme",
+                            "outputs",
+                            "repo^2",
+                            "owner^2",
+                        ],
+                    }
+                }
+            }))
+            .send()
+            .await?;
+    }
+    Ok(())
 }
 
 async fn post_publish() -> &'static str {
