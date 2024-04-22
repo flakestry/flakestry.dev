@@ -38,7 +38,14 @@ impl IntoResponse for AppError {
     }
 }
 
-#[derive(sqlx::FromRow, serde::Serialize)]
+#[derive(serde::Serialize)]
+struct GetFlakeResponse {
+    releases: Vec<Release>,
+    count: usize,
+    query: Option<String>,
+}
+
+#[derive(serde::Serialize, sqlx::FromRow)]
 struct Release {
     id: i64,
     readme: String,
@@ -70,8 +77,9 @@ async fn main() {
 async fn get_flake(
     State(state): State<Arc<AppState>>,
     Query(params): Query<HashMap<String, String>>,
-) -> Result<Json<Vec<Release>>, AppError> {
-    let releases = if let Some(q) = params.get("q") {
+) -> Result<Json<GetFlakeResponse>, AppError> {
+    let query = params.get("q");
+    let releases = if let Some(q) = query {
         let response = &state
             .opensearch
             .search(SearchParts::Index(&["opensearch_index"]))
@@ -116,7 +124,13 @@ async fn get_flake(
             .fetch_all(&state.pool)
             .await?
     };
-    return Ok(Json(releases));
+    let count = releases.len();
+    return Ok(Json(GetFlakeResponse {
+        releases,
+        count,
+        // TODO: Try to avoid using cloned()
+        query: query.cloned(),
+    }));
 }
 
 async fn post_publish() -> &'static str {
