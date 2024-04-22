@@ -137,6 +137,7 @@ async fn get_flake(
         releases.sort_by(|a, b| hits[&b.id].cmp(&hits[&a.id]));
         releases
     } else {
+        // TODO: Update this query
         sqlx::query_as::<_, FlakeRelease>("SELECT * FROM release ORDER BY created_at LIMIT 100")
             .fetch_all(&state.pool)
             .await?
