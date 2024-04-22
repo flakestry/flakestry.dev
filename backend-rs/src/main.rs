@@ -2,12 +2,12 @@ use std::{collections::HashMap, sync::Arc};
 
 use axum::{
     extract::{Query, State},
-    response::{ErrorResponse, IntoResponse},
+    response::IntoResponse,
     routing::{get, post},
     Router,
 };
 use opensearch::{OpenSearch, SearchParts};
-use serde_json::json;
+use serde_json::{json, Value};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
 struct AppState {
@@ -77,7 +77,16 @@ async fn get_flake(
                 }
             }))
             .send()
+            .await?
+            .json::<Value>()
             .await?;
+        let hits = response["hits"]["hits"]
+            .as_array()
+            // TODO: Remove this unwrap
+            .unwrap()
+            .into_iter()
+            // TODO: Transform _id to int
+            .map(|hit| (&hit["_id"], &hit["_score"]));
     }
     Ok(())
 }
