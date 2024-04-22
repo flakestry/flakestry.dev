@@ -71,7 +71,7 @@ async fn get_flake(
     State(state): State<Arc<AppState>>,
     Query(params): Query<HashMap<String, String>>,
 ) -> Result<Json<Vec<Release>>, AppError> {
-    if let Some(q) = params.get("q") {
+    let releases = if let Some(q) = params.get("q") {
         let response = &state
             .opensearch
             .search(SearchParts::Index(&["opensearch_index"]))
@@ -104,14 +104,19 @@ async fn get_flake(
                 hit["_score"].as_i64().unwrap(),
             );
         }
+        // TODO: This query is actually a join between different tables
         let mut releases = sqlx::query_as::<_, Release>("SELECT * FROM release WHERE id IN (?)")
             .bind(hits.keys().cloned().collect::<Vec<i64>>())
             .fetch_all(&state.pool)
             .await?;
         releases.sort_by(|a, b| hits[&b.id].cmp(&hits[&a.id]));
-        return Ok(Json(releases));
-    }
-    todo!()
+        releases
+    } else {
+        sqlx::query_as::<_, Release>("SELECT * FROM release ORDER BY created_at LIMIT 100")
+            .fetch_all(&state.pool)
+            .await?
+    };
+    return Ok(Json(releases));
 }
 
 async fn post_publish() -> &'static str {
