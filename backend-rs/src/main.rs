@@ -31,6 +31,12 @@ impl From<opensearch::Error> for AppError {
     }
 }
 
+#[derive(sqlx::FromRow)]
+struct Release {
+    id: i64,
+    readme: String,
+}
+
 #[tokio::main]
 async fn main() {
     // TODO: read PG and OS host names from env variables
@@ -82,13 +88,15 @@ async fn get_flake(
             .await?
             .json::<Value>()
             .await?;
-        let hits = response["hits"]["hits"]
-            .as_array()
-            // TODO: Remove this unwrap
-            .unwrap()
-            .into_iter()
-            // TODO: Transform _id to int
-            .map(|hit| (&hit["_id"], &hit["_score"]));
+        // TODO: Remove this unwrap, use fold or map to create the HashMap
+        let mut hits: HashMap<String, String> = HashMap::new();
+        for hit in response["hits"]["hits"].as_array().unwrap() {
+            hits.insert(hit["_id"].to_string(), hit["_score"].to_string());
+        }
+        sqlx::query_as::<_, Release>("SELECT * FROM release WHERE id IN (?)")
+            .bind(hits.keys().cloned().collect::<Vec<String>>())
+            .fetch_all(&state.pool)
+            .await;
     }
     Ok(())
 }
