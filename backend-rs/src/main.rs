@@ -15,7 +15,9 @@ struct AppState {
     pool: PgPool,
 }
 
-enum AppError {}
+enum AppError {
+    OpenSearchError(opensearch::Error),
+}
 
 impl IntoResponse for AppError {
     fn into_response(self) -> axum::response::Response {
@@ -25,7 +27,7 @@ impl IntoResponse for AppError {
 
 impl From<opensearch::Error> for AppError {
     fn from(value: opensearch::Error) -> Self {
-        todo!()
+        AppError::OpenSearchError(value)
     }
 }
 
