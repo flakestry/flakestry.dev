@@ -4,7 +4,7 @@ use axum::{
     extract::{Query, State},
     response::IntoResponse,
     routing::{get, post},
-    Router,
+    Json, Router,
 };
 use opensearch::{OpenSearch, SearchParts};
 use serde_json::{json, Value};
@@ -17,12 +17,7 @@ struct AppState {
 
 enum AppError {
     OpenSearchError(opensearch::Error),
-}
-
-impl IntoResponse for AppError {
-    fn into_response(self) -> axum::response::Response {
-        todo!()
-    }
+    SqlxError(sqlx::Error),
 }
 
 impl From<opensearch::Error> for AppError {
@@ -31,7 +26,19 @@ impl From<opensearch::Error> for AppError {
     }
 }
 
-#[derive(sqlx::FromRow)]
+impl From<sqlx::Error> for AppError {
+    fn from(value: sqlx::Error) -> Self {
+        AppError::SqlxError(value)
+    }
+}
+
+impl IntoResponse for AppError {
+    fn into_response(self) -> axum::response::Response {
+        todo!()
+    }
+}
+
+#[derive(sqlx::FromRow, serde::Serialize)]
 struct Release {
     id: i64,
     readme: String,
@@ -63,7 +70,7 @@ async fn main() {
 async fn get_flake(
     State(state): State<Arc<AppState>>,
     Query(params): Query<HashMap<String, String>>,
-) -> Result<(), AppError> {
+) -> Result<Json<Vec<Release>>, AppError> {
     if let Some(q) = params.get("q") {
         let response = &state
             .opensearch
@@ -89,16 +96,22 @@ async fn get_flake(
             .json::<Value>()
             .await?;
         // TODO: Remove this unwrap, use fold or map to create the HashMap
-        let mut hits: HashMap<String, String> = HashMap::new();
+        let mut hits: HashMap<i64, i64> = HashMap::new();
         for hit in response["hits"]["hits"].as_array().unwrap() {
-            hits.insert(hit["_id"].to_string(), hit["_score"].to_string());
+            // TODO: properly handle errors
+            hits.insert(
+                hit["_id"].as_i64().unwrap(),
+                hit["_score"].as_i64().unwrap(),
+            );
         }
-        sqlx::query_as::<_, Release>("SELECT * FROM release WHERE id IN (?)")
-            .bind(hits.keys().cloned().collect::<Vec<String>>())
+        let mut releases = sqlx::query_as::<_, Release>("SELECT * FROM release WHERE id IN (?)")
+            .bind(hits.keys().cloned().collect::<Vec<i64>>())
             .fetch_all(&state.pool)
-            .await;
+            .await?;
+        releases.sort_by(|a, b| hits[&b.id].cmp(&hits[&a.id]));
+        return Ok(Json(releases));
     }
-    Ok(())
+    todo!()
 }
 
 async fn post_publish() -> &'static str {
