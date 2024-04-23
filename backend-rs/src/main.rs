@@ -137,8 +137,19 @@ async fn get_flake(
         releases.sort_by(|a, b| hits[&b.id].cmp(&hits[&a.id]));
         releases
     } else {
-        // TODO: Update this query
-        sqlx::query_as::<_, FlakeRelease>("SELECT * FROM release ORDER BY created_at LIMIT 100")
+        sqlx::query_as::<_, FlakeRelease>(
+            "SELECT release.id AS id, \
+                githubowner.name AS owner, \
+                githubrepo.name AS repo, \
+                release.version AS version, \
+                release.description AS description, \
+                release.created_at AS created_at \
+                FROM release \
+                INNER JOIN githubrepo ON githubrepo.id = release.repo_id \
+                INNER JOIN githubowner ON githubowner.id = githubrepo.owner_id \
+                ORDER BY release.created_at LIMIT 100"
+
+        )
             .fetch_all(&state.pool)
             .await?
     };
