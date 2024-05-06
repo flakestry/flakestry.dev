@@ -2,11 +2,12 @@ use std::{collections::HashMap, sync::Arc};
 
 use axum::{
     extract::{Query, State},
+    http::StatusCode,
     response::IntoResponse,
     routing::{get, post},
     Json, Router,
 };
-use opensearch::{OpenSearch, SearchParts};
+use opensearch::{indices::IndicesCreateParts, OpenSearch, SearchParts};
 use serde_json::{json, Value};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
@@ -34,7 +35,11 @@ impl From<sqlx::Error> for AppError {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> axum::response::Response {
-        todo!()
+        let body = match self {
+            AppError::OpenSearchError(error) => error.to_string(),
+            AppError::SqlxError(error) => error.to_string(),
+        };
+        (StatusCode::INTERNAL_SERVER_ERROR, Json(body)).into_response()
     }
 }
 
@@ -69,15 +74,23 @@ async fn main() {
         opensearch: OpenSearch::default(),
         pool,
     });
-    let api = Router::new()
-        .route("/flake", get(get_flake))
-        .route("/publish", post(post_publish))
-        .with_state(state);
-    let app = Router::new().nest("/api", api);
-
+    // TODO: check if index exist before creating one
+    let _ = state
+        .opensearch
+        .indices()
+        .create(IndicesCreateParts::Index("flakes"))
+        .send()
+        .await;
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(listener, app(state)).await.unwrap();
+}
+
+fn app(state: Arc<AppState>) -> Router {
+    let api = Router::new()
+        .route("/flake", get(get_flake))
+        .route("/publish", post(post_publish));
+    Router::new().nest("/api", api).with_state(state)
 }
 
 async fn get_flake(
@@ -88,7 +101,7 @@ async fn get_flake(
     let releases = if let Some(q) = query {
         let response = &state
             .opensearch
-            .search(SearchParts::Index(&["opensearch_index"]))
+            .search(SearchParts::Index(&["flakes"]))
             .size(10)
             .body(json!({
                 "query": {
@@ -129,7 +142,7 @@ async fn get_flake(
                 FROM release \
                 INNER JOIN githubrepo ON githubrepo.id = release.repo_id \
                 INNER JOIN githubowner ON githubowner.id = githubrepo.owner_id \
-                WHERE release.id IN (?)",
+                WHERE release.id IN ($1)",
         )
         .bind(hits.keys().cloned().collect::<Vec<i64>>())
         .fetch_all(&state.pool)
@@ -147,11 +160,10 @@ async fn get_flake(
                 FROM release \
                 INNER JOIN githubrepo ON githubrepo.id = release.repo_id \
                 INNER JOIN githubowner ON githubowner.id = githubrepo.owner_id \
-                ORDER BY release.created_at LIMIT 100"
-
+                ORDER BY release.created_at DESC LIMIT 100",
         )
-            .fetch_all(&state.pool)
-            .await?
+        .fetch_all(&state.pool)
+        .await?
     };
     let count = releases.len();
     return Ok(Json(GetFlakeResponse {
@@ -164,4 +176,63 @@ async fn get_flake(
 
 async fn post_publish() -> &'static str {
     "Publish"
+}
+
+#[cfg(test)]
+mod tests {
+    use std::env;
+
+    use super::*;
+    use axum::body::Body;
+    use axum::http::{Request, StatusCode};
+    use http_body_util::BodyExt;
+    use sqlx::postgres::PgConnectOptions;
+    use tower::ServiceExt;
+
+    #[tokio::test]
+    async fn test_get_flake_with_params() {
+        let host = env::var("PGHOST").unwrap().to_string();
+        let opts = PgConnectOptions::new().host(&host);
+        let pool = PgPoolOptions::new().connect_with(opts).await.unwrap();
+        let state = Arc::new(AppState {
+            opensearch: OpenSearch::default(),
+            pool,
+        });
+        let app = app(state);
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/api/flake?q=search")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let body: Value = serde_json::from_slice(&body).unwrap();
+        println!("#{body}");
+        // assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn test_get_flake_without_params() {
+        let host = env::var("PGHOST").unwrap().to_string();
+        let opts = PgConnectOptions::new().host(&host);
+        let pool = PgPoolOptions::new().connect_with(opts).await.unwrap();
+        let state = Arc::new(AppState {
+            opensearch: OpenSearch::default(),
+            pool,
+        });
+        let app = app(state);
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/api/flake")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+    }
 }

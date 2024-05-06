@@ -9,7 +9,7 @@ inputs:
   mk-shell-bin:
     url: github:rrbutani/nix-mk-shell-bin
   fenix:
-    url: github:nix-community/fenix
+    url: github:sandydoo/fenix/patch-rust-analyzer-preview
     inputs:
       nixpkgs:
         follows: nixpkgs

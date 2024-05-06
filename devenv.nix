@@ -44,6 +44,7 @@ in
     pkgs.darwin.CF
     pkgs.darwin.Security
     pkgs.darwin.configd
+    pkgs.darwin.dyld
   ];
 
   # https://github.com/cachix/devenv/pull/745
