@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, env, sync::Arc};
 
 use axum::{
     extract::{Query, State},
@@ -9,7 +9,7 @@ use axum::{
 };
 use opensearch::{indices::IndicesCreateParts, OpenSearch, SearchParts};
 use serde_json::{json, Value};
-use sqlx::{postgres::PgPoolOptions, PgPool};
+use sqlx::postgres::{PgPool, PgPoolOptions};
 
 struct AppState {
     opensearch: OpenSearch,
@@ -66,10 +66,9 @@ struct FlakeRelease {
 async fn main() {
     // TODO: read PG and OS host names from env variables
     // build our application with a single route
-    let pool = PgPoolOptions::new()
-        .connect("postgres://localhost:5432")
-        .await
-        .unwrap();
+    dotenv::dotenv().ok();
+    let database_url = env::var("DATABASE_URL").unwrap();
+    let pool = PgPoolOptions::new().connect(&database_url).await.unwrap();
     let state = Arc::new(AppState {
         opensearch: OpenSearch::default(),
         pool,
