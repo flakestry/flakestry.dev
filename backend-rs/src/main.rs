@@ -10,6 +10,9 @@ use axum::{
 use opensearch::{indices::IndicesCreateParts, OpenSearch, SearchParts};
 use serde_json::{json, Value};
 use sqlx::postgres::{PgPool, PgPoolOptions};
+use tower_http::trace::TraceLayer;
+use tracing_subscriber::{fmt, EnvFilter};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 struct AppState {
     opensearch: OpenSearch,
@@ -67,6 +70,10 @@ async fn main() {
     // TODO: read PG and OS host names from env variables
     // build our application with a single route
     dotenv::dotenv().ok();
+    tracing_subscriber::registry()
+        .with(fmt::layer())
+        .with(EnvFilter::from_default_env())
+        .init();
     let database_url = env::var("DATABASE_URL").unwrap();
     let pool = PgPoolOptions::new().connect(&database_url).await.unwrap();
     let state = Arc::new(AppState {
@@ -89,7 +96,10 @@ fn app(state: Arc<AppState>) -> Router {
     let api = Router::new()
         .route("/flake", get(get_flake))
         .route("/publish", post(post_publish));
-    Router::new().nest("/api", api).with_state(state)
+    Router::new()
+        .nest("/api", api)
+        .layer(TraceLayer::new_for_http())
+        .with_state(state)
 }
 
 async fn get_flake(
