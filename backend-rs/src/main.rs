@@ -1,8 +1,9 @@
-use std::{collections::HashMap, env, sync::Arc};
+use std::{collections::HashMap, env, net::SocketAddr, sync::Arc};
 
 use axum::{
-    extract::{Query, State},
+    extract::{ConnectInfo, Query, Request, State},
     http::StatusCode,
+    middleware::{self, Next},
     response::IntoResponse,
     routing::{get, post},
     Json, Router,
@@ -11,6 +12,7 @@ use opensearch::{indices::IndicesCreateParts, OpenSearch, SearchParts};
 use serde_json::{json, Value};
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use tower_http::trace::TraceLayer;
+use tracing::{field, info_span, Span};
 use tracing_subscriber::{fmt, EnvFilter};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -71,7 +73,7 @@ async fn main() {
     // build our application with a single route
     dotenv::dotenv().ok();
     tracing_subscriber::registry()
-        .with(fmt::layer())
+        .with(fmt::layer().with_target(false))
         .with(EnvFilter::from_default_env())
         .init();
     let database_url = env::var("DATABASE_URL").unwrap();
@@ -89,7 +91,23 @@ async fn main() {
         .await;
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app(state)).await.unwrap();
+    tracing::info!("Listening on 0.0.0.0:3000");
+    axum::serve(
+        listener,
+        app(state).into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await
+    .unwrap();
+}
+
+async fn add_ip_trace(
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    req: Request,
+    next: Next,
+) -> impl IntoResponse {
+    Span::current().record("ip", format!("{}", addr));
+
+    next.run(req).await
 }
 
 fn app(state: Arc<AppState>) -> Router {
@@ -98,7 +116,15 @@ fn app(state: Arc<AppState>) -> Router {
         .route("/publish", post(post_publish));
     Router::new()
         .nest("/api", api)
-        .layer(TraceLayer::new_for_http())
+        .layer(middleware::from_fn(add_ip_trace))
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(
+                    |request: &Request| {
+                        info_span!("request", ip = field::Empty, method = %request.method(), uri = %request.uri(), version = ?request.version())
+                    }
+                )
+        )
         .with_state(state)
 }
 
@@ -132,12 +158,12 @@ async fn get_flake(
             .json::<Value>()
             .await?;
         // TODO: Remove this unwrap, use fold or map to create the HashMap
-        let mut hits: HashMap<i64, i64> = HashMap::new();
+        let mut hits: HashMap<i64, f64> = HashMap::new();
         for hit in response["hits"]["hits"].as_array().unwrap() {
             // TODO: properly handle errors
             hits.insert(
-                hit["_id"].as_i64().unwrap(),
-                hit["_score"].as_i64().unwrap(),
+                hit["_id"].as_str().unwrap().parse().unwrap(),
+                hit["_score"].as_f64().unwrap(),
             );
         }
         // TODO: This query is actually a join between different tables
@@ -147,16 +173,16 @@ async fn get_flake(
                 githubrepo.name AS repo, \
                 release.version AS version, \
                 release.description AS description, \
-                release.created_at AS created_at \
+                CAST(release.created_at AS VARCHAR) AS created_at \
                 FROM release \
                 INNER JOIN githubrepo ON githubrepo.id = release.repo_id \
                 INNER JOIN githubowner ON githubowner.id = githubrepo.owner_id \
-                WHERE release.id IN ($1)",
+                WHERE release.id IN (1)",
         )
-        .bind(hits.keys().cloned().collect::<Vec<i64>>())
+        // .bind(hits.keys().cloned().collect::<Vec<i64>>())
         .fetch_all(&state.pool)
         .await?;
-        releases.sort_by(|a, b| hits[&b.id].cmp(&hits[&a.id]));
+        releases.sort_by(|a, b| hits[&b.id].partial_cmp(&hits[&a.id]).unwrap());
         releases
     } else {
         sqlx::query_as::<_, FlakeRelease>(
@@ -165,7 +191,7 @@ async fn get_flake(
                 githubrepo.name AS repo, \
                 release.version AS version, \
                 release.description AS description, \
-                release.created_at AS created_at \
+                CAST(release.created_at AS VARCHAR) AS created_at \
                 FROM release \
                 INNER JOIN githubrepo ON githubrepo.id = release.repo_id \
                 INNER JOIN githubowner ON githubowner.id = githubrepo.owner_id \
