@@ -35,11 +35,12 @@ in
   packages = [
     pkgs.postgresql
     pkgs.gnused
+    pkgs.openssl
   ] ++ lib.optionals (!config.container.isBuilding) [
     pkgs.flyctl
     pkgs.cloudflared
     pkgs.openapi-generator-cli
-    pkgs.nodePackages.pyright
+    pkgs.pyright
   ] ++ lib.optionals pkgs.stdenv.isDarwin [
     pkgs.darwin.CF
     pkgs.darwin.Security
@@ -97,13 +98,19 @@ in
     export PATH="${config.devenv.root}/node_modules/.bin:$PATH"
   '';
 
+  enterTest = ''
+    pushd backend-rs
+    cargo build
+    popd
+  '';
+
   scripts.fetch-openapi-templates.exec =
     let
       openApiSrc = pkgs.fetchFromGitHub {
         owner = "OpenAPITools";
         repo = "openapi-generator";
         rev = "v${pkgs.openapi-generator-cli.version}";
-        hash = "sha256-nAc/iU31ccNoZAQdrdAnBtNPBTgCStDpiqrC1DC4d6E=";
+        hash = "sha256-J3ukIIH4k6VsCF+FqUEaLcEeVrQcSfFeJrmAO8buhGw=";
       };
     in
     ''
