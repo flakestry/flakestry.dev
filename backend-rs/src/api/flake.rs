@@ -1,3 +1,4 @@
+use anyhow::Context;
 use axum::{
     extract::{Query, State},
     Json,
@@ -6,7 +7,7 @@ use chrono::NaiveDateTime;
 use opensearch::{OpenSearch, SearchParts};
 use serde_json::{json, Value};
 use sqlx::{postgres::PgRow, FromRow, Pool, Postgres, Row};
-use std::{collections::HashMap, sync::Arc};
+use std::{cmp::Ordering, collections::HashMap, sync::Arc};
 
 use crate::common::{AppError, AppState};
 
@@ -19,6 +20,26 @@ struct FlakeRelease {
     version: String,
     description: String,
     created_at: NaiveDateTime,
+}
+
+impl Eq for FlakeRelease {}
+
+impl Ord for FlakeRelease {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.id.cmp(&other.id)
+    }
+}
+
+impl PartialOrd for FlakeRelease {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for FlakeRelease {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
 }
 
 impl FromRow<'_, PgRow> for FlakeRelease {
@@ -53,7 +74,7 @@ pub async fn get_flake(
 
         if !releases.is_empty() {
             // Should this be done by the DB?
-            releases.sort_by(|a, b| hits[&b.id].partial_cmp(&hits[&a.id]).unwrap());
+            releases.sort();
         }
 
         releases
@@ -71,7 +92,7 @@ pub async fn get_flake(
 async fn get_flakes_by_ids(
     flake_ids: Vec<&i32>,
     pool: &Pool<Postgres>,
-) -> Result<Vec<FlakeRelease>, sqlx::Error> {
+) -> Result<Vec<FlakeRelease>, AppError> {
     if flake_ids.is_empty() {
         return Ok(vec![]);
     }
@@ -92,12 +113,16 @@ async fn get_flakes_by_ids(
             WHERE release.id IN ({param_string})",
     );
 
-    let releases: Vec<FlakeRelease> = sqlx::query_as(&query).fetch_all(pool).await?;
+    let releases: Vec<FlakeRelease> = 
+        sqlx::query_as(&query)
+        .fetch_all(pool)
+        .await
+        .context("Failed to fetch flakes by id from database")?;
 
     Ok(releases)
 }
 
-async fn get_flakes(pool: &Pool<Postgres>) -> Result<Vec<FlakeRelease>, sqlx::Error> {
+async fn get_flakes(pool: &Pool<Postgres>) -> Result<Vec<FlakeRelease>, AppError> {
     let releases: Vec<FlakeRelease> = sqlx::query_as(
         "SELECT release.id AS id, \
             githubowner.name AS owner, \
@@ -111,15 +136,13 @@ async fn get_flakes(pool: &Pool<Postgres>) -> Result<Vec<FlakeRelease>, sqlx::Er
             ORDER BY release.created_at DESC LIMIT 100",
     )
     .fetch_all(pool)
-    .await?;
+    .await
+    .context("Failed to fetch flakes from database")?;
 
     Ok(releases)
 }
 
-async fn search_flakes(
-    opensearch: &OpenSearch,
-    q: &String,
-) -> Result<HashMap<i32, f64>, opensearch::Error> {
+async fn search_flakes(opensearch: &OpenSearch, q: &String) -> Result<HashMap<i32, f64>, AppError> {
     let res = opensearch
         .search(SearchParts::Index(&["flakes"]))
         .size(10)
@@ -139,19 +162,30 @@ async fn search_flakes(
             }
         }))
         .send()
-        .await?
+        .await
+        .context("Failed to send opensearch request")?
         .json::<Value>()
-        .await?;
+        .await
+        .context("Failed to decode opensearch response as json")?;
 
     // TODO: Remove this unwrap, use fold or map to create the HashMap
     let mut hits: HashMap<i32, f64> = HashMap::new();
 
-    for hit in res["hits"]["hits"].as_array().unwrap() {
-        // TODO: properly handle errors
-        hits.insert(
-            hit["_id"].as_str().unwrap().parse().unwrap(),
-            hit["_score"].as_f64().unwrap(),
-        );
+    let hit_res = res["hits"]["hits"]
+        .as_array()
+        .context("failed to extract hits from open search response")?;
+
+    for hit in hit_res {
+        let id = hit["_id"]
+            .as_str()
+            .context("failed to read id as string from open search hit")?
+            .parse()
+            .context("failed to parse id from open search hit")?;
+        let score = hit["_score"]
+            .as_f64()
+            .context("failed to parse score from open search hit")?;
+
+        hits.insert(id, score);
     }
 
     Ok(hits)

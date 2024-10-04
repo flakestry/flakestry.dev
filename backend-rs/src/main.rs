@@ -32,22 +32,27 @@ async fn main() {
         .with(fmt::layer().with_target(false))
         .with(EnvFilter::from_default_env())
         .init();
-    let database_url = env::var("DATABASE_URL").unwrap();
-    let pool = PgPoolOptions::new().connect(&database_url).await.unwrap();
+    let database_url = env::var("DATABASE_URL").expect("Failed to parse database url");
+    let pool = PgPoolOptions::new()
+        .connect(&database_url)
+        .await
+        .expect("failed to start database pool");
     let state = Arc::new(AppState {
         opensearch: OpenSearch::default(),
         pool,
     });
     let _ = create_flake_index(&state.opensearch).await;
     // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
+        .await
+        .expect("Failed to bind TCP listener");
     tracing::info!("Listening on 0.0.0.0:3000");
     axum::serve(
         listener,
         app(state).into_make_service_with_connect_info::<SocketAddr>(),
     )
     .await
-    .unwrap();
+    .expect("Failed to start axum");
 }
 
 async fn add_ip_trace(
