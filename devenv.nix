@@ -38,6 +38,7 @@ in
   packages = [
     pkgs.postgresql
     pkgs.openssl
+    pkgs.cargo-watch
   ] ++ lib.optionals (!config.container.isBuilding) [
     pkgs.flyctl
     pkgs.cloudflared
@@ -148,6 +149,7 @@ in
 
   processes = {
     backend.exec = "cd ${config.devenv.root} && uvicorn --app-dir backend ${lib.optionalString (!config.container.isBuilding) "--reload"} flakestry.main:app";
+    backend-rs.exec = "cd ${config.devenv.root}/backend-rs && cargo watch -x run";
   } // lib.optionalAttrs (!config.container.isBuilding) {
     frontend.exec = "cd ${config.devenv.root}/frontend && elm-land server";
   };
