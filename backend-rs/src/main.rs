@@ -77,9 +77,10 @@ fn app(state: Arc<AppState>) -> Router {
         .allow_origin(Any);
 
     let api = Router::new()
-        .route("/flake", get(get_flake))
-        .route("/flake/github/:owner", get(get_owner))
-        .route("/publish", post(post_publish));
+        .route("/flake", get(api::get_flake))
+        .route("/flake/github/:owner", get(api::get_owner))
+        .route("/flake/github/:owner/:repo", get(api::get_repo))
+        .route("/publish", post(api::post_publish));
 
     Router::new()
         .nest("/api", api)

@@ -20,6 +20,10 @@ struct FlakeRelease {
     version: String,
     description: String,
     created_at: NaiveDateTime,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    commit: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    readme: Option<String>,
 }
 
 impl Ord for FlakeRelease {
@@ -49,6 +53,8 @@ impl FromRow<'_, PgRow> for FlakeRelease {
             version: row.try_get("version")?,
             description: row.try_get("description").unwrap_or_default(),
             created_at: row.try_get("created_at")?,
+            commit: row.try_get("commit").ok(),
+            readme: row.try_get("readme").ok(),
         })
     }
 }
@@ -63,6 +69,11 @@ pub struct GetFlakeResponse {
 #[derive(serde::Serialize)]
 pub struct GetOwnerResponse {
     repos: Vec<FlakeRelease>,
+}
+
+#[derive(serde::Serialize)]
+pub struct GetRepoResponse {
+    releases: Vec<FlakeRelease>,
 }
 
 pub async fn get_flake(
@@ -101,6 +112,15 @@ pub async fn get_owner(
     let repos = get_flakes_by_owner(&state.pool, &owner).await?;
 
     Ok(Json(GetOwnerResponse { repos }))
+}
+
+pub async fn get_repo(
+    State(state): State<Arc<AppState>>,
+    Path((owner, repo)): Path<(String, String)>,
+) -> Result<Json<GetRepoResponse>, AppError> {
+    let releases = get_flakes_by_owner_and_repo(&state.pool, &owner, &repo).await?;
+
+    Ok(Json(GetRepoResponse { releases }))
 }
 
 async fn get_flakes_by_ids(
@@ -176,6 +196,34 @@ async fn get_flakes_by_owner(
     .fetch_all(pool)
     .await
     .context("Failed to fetch owner from database")?;
+
+    Ok(releases)
+}
+
+async fn get_flakes_by_owner_and_repo(
+    pool: &Pool<Postgres>,
+    owner: &str,
+    repo: &str,
+) -> Result<Vec<FlakeRelease>, AppError> {
+    let releases: Vec<FlakeRelease> = sqlx::query_as(
+        "SELECT release.id AS id, \
+            githubowner.name AS owner, \
+            githubrepo.name AS repo, \
+            release.version AS version, \
+            release.description AS description, \
+            release.created_at AS created_at, \
+            release.commit AS commit, \
+            release.readme AS readme \
+            FROM release \
+            INNER JOIN githubrepo ON githubrepo.id = release.repo_id \
+            INNER JOIN githubowner ON githubowner.id = githubrepo.owner_id \
+            WHERE githubowner.name = $1 AND githubrepo.name = $2",
+    )
+    .bind(owner)
+    .bind(repo)
+    .fetch_all(pool)
+    .await
+    .context("Failed to fetch owner and repo from database")?;
 
     Ok(releases)
 }
