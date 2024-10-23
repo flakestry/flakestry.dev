@@ -10,7 +10,7 @@ module Pages.Flake.Github.Org_.Repo_.Version_ exposing
 
 import Api
 import Api.Data as Api
-import Api.Request.Default as Api
+import Api.Request.Api as Api
 import Api.Time as ApiTime
 import Components.File as File
 import Dict
@@ -46,7 +46,7 @@ page _ route =
 
 
 type alias Model =
-    { repoResponse : WebData Api.RepoResponse
+    { repoResponse : WebData Api.GetRepoResponse
     , releaseResponse : WebData Api.Release
     , org : String
     , repo : String
@@ -88,7 +88,7 @@ init org repo version hash _ =
       }
     , Effect.sendCmd <|
         Api.send HandleGetRepoResponse <|
-            Api.readRepoFlakeGithubOwnerRepoGet org repo
+            Api.getRepo org repo
     )
 
 
@@ -97,7 +97,7 @@ init org repo version hash _ =
 
 
 type Msg
-    = HandleGetRepoResponse (Result Http.Error Api.RepoResponse)
+    = HandleGetRepoResponse (Result Http.Error Api.GetRepoResponse)
     | HandleGetVersionResponse (Result Http.Error Api.Release)
     | ToggleVersionDropdown Bool
     | SearchInput String
@@ -134,7 +134,7 @@ update msg model =
                 Just version ->
                     Effect.sendCmd <|
                         Api.send HandleGetVersionResponse <|
-                            Api.readVersionFlakeGithubOwnerRepoVersionGet model.org model.repo version
+                            Api.getVersion model.org model.repo version
             )
 
         HandleGetVersionResponse response ->
@@ -360,11 +360,15 @@ viewOutputs model flakeRelease =
                     "https://github.com/" ++ flakeRelease.owner ++ "/" ++ flakeRelease.repo
 
                 revision =
-                    if flakeRelease.commit == "" then
-                        "HEAD"
+                    case flakeRelease.commit of
+                        Nothing ->
+                            "HEAD"
 
-                    else
-                        flakeRelease.commit
+                        Just "" ->
+                            "HEAD"
+
+                        Just commit ->
+                            commit
 
                 tab name hash icon =
                     let
@@ -495,7 +499,7 @@ viewOutputs model flakeRelease =
                             File.defaultOptions
                                 |> File.fileName "README"
                                 |> File.class "markdown-body"
-                                |> File.contents flakeRelease.readme
+                                |> File.contents (Maybe.withDefault "" flakeRelease.readme)
                                 |> File.baseUrl (baseUrl ++ "/blob/" ++ revision ++ "/")
                                 |> File.rawBaseUrl (baseUrl ++ "/raw/" ++ revision ++ "/")
                                 |> File.file

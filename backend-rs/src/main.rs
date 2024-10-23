@@ -1,6 +1,3 @@
-mod api;
-mod common;
-
 use axum::{
     extract::{ConnectInfo, Request},
     middleware::{self, Next},
@@ -22,7 +19,7 @@ use tracing::{field, info_span, Span};
 use tracing_subscriber::{fmt, EnvFilter};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::common::AppState;
+use backend_rs::{api, common::AppState, openapi::openapi};
 
 #[tokio::main]
 async fn main() {
@@ -80,7 +77,8 @@ fn app(state: Arc<AppState>) -> Router {
         .route("/flake/github/:owner", get(api::get_owner))
         .route("/flake/github/:owner/:repo", get(api::get_repo))
         .route("/flake/github/:owner/:repo/:version", get(api::get_version))
-        .route("/publish", post(api::post_publish));
+        .route("/publish", post(api::post_publish))
+        .route("/openapi.json", get(openapi));
 
     Router::new()
         .nest("/api", api)

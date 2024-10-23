@@ -2,7 +2,7 @@ module Pages.Flake.Github.Org_ exposing (Model, Msg, page)
 
 import Api
 import Api.Data
-import Api.Request.Default as Api
+import Api.Request.Api as Api
 import Components.FlakeCard
 import Effect exposing (Effect)
 import Flakestry.Layout
@@ -31,7 +31,7 @@ page shared route =
 
 
 type alias Model =
-    { ownerResponse : WebData Api.Data.OwnerResponse }
+    { ownerResponse : WebData Api.Data.GetOwnerResponse }
 
 
 init : String -> () -> ( Model, Effect Msg )
@@ -39,7 +39,7 @@ init org () =
     ( { ownerResponse = RemoteData.NotAsked }
     , Effect.sendCmd <|
         Api.send HandleGetOwnerResponse <|
-            Api.readOwnerFlakeGithubOwnerGet org
+            Api.getOwner org
     )
 
 
@@ -48,7 +48,7 @@ init org () =
 
 
 type Msg
-    = HandleGetOwnerResponse (Result Http.Error Api.Data.OwnerResponse)
+    = HandleGetOwnerResponse (Result Http.Error Api.Data.GetOwnerResponse)
 
 
 update : Msg -> Model -> ( Model, Effect Msg )
@@ -94,7 +94,7 @@ view org model =
     }
 
 
-viewRepoCard : List Api.Data.FlakeReleaseCompact -> Html Msg
+viewRepoCard : List Api.Data.FlakeRelease -> Html Msg
 viewRepoCard repos =
     div [ class "space-y-4" ]
         (List.map

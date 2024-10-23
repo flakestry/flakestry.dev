@@ -2,7 +2,7 @@ module Pages.Home_ exposing (Model, Msg, page)
 
 import Api
 import Api.Data as Api
-import Api.Request.Default as Api
+import Api.Request.Api as Api
 import Components.FlakeCard
 import Components.Search as Search
 import Dict
@@ -35,7 +35,7 @@ page shared route =
 
 type alias Model =
     { searchState : Search.Model
-    , latestFlakesResponse : WebData Api.FlakesResponse
+    , latestFlakesResponse : WebData Api.GetFlakeResponse
     }
 
 
@@ -54,7 +54,7 @@ init route () =
             Effect.batch
                 [ -- Load the latest flakes
                   Effect.sendCmd <|
-                    Api.send HandleFlakesResponse (Api.getFlakesFlakeGet Nothing)
+                    Api.send HandleFlakesResponse (Api.getFlake Nothing)
 
                 -- Search for flakes based on the query in the url
                 , case newSearchState.query of
@@ -76,7 +76,7 @@ init route () =
 
 type Msg
     = HandleSearch Search.Msg
-    | HandleFlakesResponse (Result Http.Error Api.FlakesResponse)
+    | HandleFlakesResponse (Result Http.Error Api.GetFlakeResponse)
 
 
 update : Route () -> Msg -> Model -> ( Model, Effect Msg )
@@ -151,7 +151,7 @@ view model =
     }
 
 
-viewSearchResults : WebData Api.FlakesResponse -> Search.Model -> Html msg
+viewSearchResults : WebData Api.GetFlakeResponse -> Search.Model -> Html msg
 viewSearchResults latestFlakesResponse searchState =
     if searchState.query == Nothing then
         viewLatestFlakes latestFlakesResponse
@@ -171,7 +171,7 @@ viewSearchResults latestFlakesResponse searchState =
             ]
 
 
-viewLatestFlakes : WebData Api.FlakesResponse -> Html msg
+viewLatestFlakes : WebData Api.GetFlakeResponse -> Html msg
 viewLatestFlakes latestFlakesResponse =
     div []
         [ h2 [ class "max-w-3xl flex items-center pt-12 text-xl text-slate-900 font-semibold" ]
@@ -182,7 +182,7 @@ viewLatestFlakes latestFlakesResponse =
         ]
 
 
-viewFlakeResults : WebData Api.FlakesResponse -> Html msg
+viewFlakeResults : WebData Api.GetFlakeResponse -> Html msg
 viewFlakeResults response =
     case response of
         RemoteData.Success flakes ->
@@ -212,7 +212,7 @@ viewFlakeResults response =
             div [ class "mt-12" ] [ text "Loading..." ]
 
 
-getSearchCount : WebData Api.FlakesResponse -> Int
+getSearchCount : WebData Api.GetFlakeResponse -> Int
 getSearchCount response =
     case response of
         RemoteData.Success flakes ->

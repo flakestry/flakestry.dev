@@ -11,7 +11,7 @@ use std::{cmp::Ordering, collections::HashMap, sync::Arc};
 
 use crate::common::{AppError, AppState};
 
-#[derive(serde::Serialize, Eq)]
+#[derive(serde::Serialize, Eq, utoipa::ToSchema)]
 struct FlakeRelease {
     #[serde(skip_serializing)]
     id: i32,
@@ -20,8 +20,10 @@ struct FlakeRelease {
     version: String,
     description: String,
     created_at: NaiveDateTime,
+    #[schema(value_type = String)]
     #[serde(skip_serializing_if = "Option::is_none")]
     commit: Option<String>,
+    #[schema(value_type = String)]
     #[serde(skip_serializing_if = "Option::is_none")]
     readme: Option<String>,
 }
@@ -59,7 +61,7 @@ impl FromRow<'_, PgRow> for FlakeRelease {
     }
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, utoipa::ToSchema)]
 pub struct Release {
     #[serde(skip_serializing)]
     id: i32,
@@ -70,8 +72,10 @@ pub struct Release {
     commit: String,
     description: Option<String>,
     created_at: NaiveDateTime,
+    #[schema(value_type = Option<Object>)]
     meta_data: Option<Value>,
     meta_data_errors: Option<Vec<String>>,
+    #[schema(value_type = Option<Object>)]
     outputs: Option<Value>,
     outputs_errors: Option<Vec<String>>,
 }
@@ -95,23 +99,34 @@ impl FromRow<'_, PgRow> for Release {
     }
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, utoipa::ToSchema)]
 pub struct GetFlakeResponse {
     releases: Vec<FlakeRelease>,
     count: usize,
     query: Option<String>,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, utoipa::ToSchema)]
 pub struct GetOwnerResponse {
     repos: Vec<FlakeRelease>,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, utoipa::ToSchema)]
 pub struct GetRepoResponse {
     releases: Vec<FlakeRelease>,
 }
 
+#[utoipa::path(
+        get,
+        path = "/api/flake",
+        responses(
+            (status = 200, description = "", body = GetFlakeResponse)
+        ),
+        params(
+                ("q" = Option<String>, Query, description = ""),
+            )
+
+    )]
 pub async fn get_flake(
     State(state): State<Arc<AppState>>,
     Query(mut params): Query<HashMap<String, String>>,
@@ -141,6 +156,16 @@ pub async fn get_flake(
     }))
 }
 
+#[utoipa::path(
+        get,
+        path = "/api/flake/github/{owner}",
+        responses(
+            (status = 200, description = "", body = GetOwnerResponse)
+        ),
+        params(
+                ("owner" = String, Path, description = ""),
+            )
+    )]
 pub async fn get_owner(
     State(state): State<Arc<AppState>>,
     Path(owner): Path<String>,
@@ -150,6 +175,17 @@ pub async fn get_owner(
     Ok(Json(GetOwnerResponse { repos }))
 }
 
+#[utoipa::path(
+        get,
+        path = "/api/flake/github/{owner}/{repo}",
+        responses(
+            (status = 200, description = "", body = GetRepoResponse)
+        ),
+        params(
+                ("owner" = String, Path, description = ""),
+                ("repo" = String, Path, description = ""),
+            )
+    )]
 pub async fn get_repo(
     State(state): State<Arc<AppState>>,
     Path((owner, repo)): Path<(String, String)>,
@@ -159,6 +195,18 @@ pub async fn get_repo(
     Ok(Json(GetRepoResponse { releases }))
 }
 
+#[utoipa::path(
+        get,
+        path = "/api/flake/github/{owner}/{repo}/{version}",
+        responses(
+            (status = 200, description = "", body = Release)
+        ),
+        params(
+                ("owner" = String, Path, description = ""),
+                ("repo" = String, Path, description = ""),
+                ("version" = String, Path, description = ""),
+            )
+    )]
 pub async fn get_version(
     State(state): State<Arc<AppState>>,
     Path((owner, repo, version)): Path<(String, String, String)>,

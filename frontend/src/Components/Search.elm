@@ -2,7 +2,7 @@ module Components.Search exposing (..)
 
 import Api
 import Api.Data as Api
-import Api.Request.Default as Api
+import Api.Request.Api as Api
 import Debouncer.Basic as Debouncer exposing (Debouncer)
 import Effect exposing (Effect)
 import Html exposing (..)
@@ -17,7 +17,7 @@ import Svg.Attributes as SvgAttr
 
 type alias Model =
     { query : Maybe String
-    , searchResponse : WebData Api.FlakesResponse
+    , searchResponse : WebData Api.GetFlakeResponse
     , debouncer : Debouncer Msg Msg
     }
 
@@ -25,7 +25,7 @@ type alias Model =
 type Msg
     = SetQuery String
     | Search
-    | HandleSearchResponse (Result Http.Error Api.FlakesResponse)
+    | HandleSearchResponse (Result Http.Error Api.GetFlakeResponse)
     | Debounce (Debouncer.Msg Msg)
     | KeyDown String
 
@@ -72,7 +72,7 @@ update msg model =
                         _ ->
                             Effect.sendCmd <|
                                 Api.send HandleSearchResponse <|
-                                    Api.getFlakesFlakeGet model.query
+                                    Api.getFlake model.query
             in
             ( model
             , searchCmd

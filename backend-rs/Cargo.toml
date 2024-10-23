@@ -5,6 +5,12 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+default-run = "backend-rs"
+
+[[bin]]
+name = "gen-openapi"
+path = "src/gen_openapi.rs"
+
 [dependencies]
 anyhow = "1.0.86"
 axum = { version = "0.7", features = ["tracing"] }
@@ -20,6 +26,7 @@ tokio = { version = "1.37", features = ["full"] }
 tower-http = { version = "0.5", features = ["trace", "cors"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+utoipa = { version = "5.1.2", features = ["chrono", "yaml"] }
 
 [dev-dependencies]
 http-body-util = "0.1"

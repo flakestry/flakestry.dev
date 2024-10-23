@@ -33,17 +33,15 @@ let
 in
 {
   env.DATABASE_URL = "postgres://flakestry@localhost:5431/";
-  env.BASE_PATH = "localhost:3000/api";
+  env.BASE_PATH = "localhost:3000";
 
   packages = [
-    pkgs.postgresql
     pkgs.openssl
     pkgs.cargo-watch
+    pkgs.elmPackages.elm-land
   ] ++ lib.optionals (!config.container.isBuilding) [
     pkgs.flyctl
-    pkgs.cloudflared
     pkgs.openapi-generator-cli
-    pkgs.pyright
   ] ++ lib.optionals pkgs.stdenv.isDarwin [
     pkgs.darwin.CF
     pkgs.darwin.Security
@@ -51,18 +49,16 @@ in
     pkgs.darwin.dyld
   ];
 
-  languages.python = {
-    enable = true;
-    poetry.enable = true;
-  };
-
   languages.javascript = {
     enable = true;
     npm.install.enable = true;
   };
 
+  languages.python = {
+    enable = true;
+    poetry.enable = true;
+  };
   languages.typescript.enable = true;
-
   languages.elm.enable = true;
 
   languages.rust = {
@@ -90,23 +86,18 @@ in
 
       route {
         handle_path /api/* {
-          reverse_proxy localhost:8000
+          reverse_proxy localhost:3000
         }
 
         ${ if config.container.isBuilding then ''
           try_files {path} /
           file_server
         '' else ''
-          reverse_proxy localhost:5200
+          reverse_proxy localhost:1234
         ''}
       }
     '';
   };
-
-  # TODO: add this to javascript.npm implementation
-  enterShell = ''
-    export PATH="${config.devenv.root}/node_modules/.bin:$PATH"
-  '';
 
   enterTest = ''
     pushd backend-rs
@@ -135,11 +126,11 @@ in
   # An alternative would be to specify the server URL when created the FastAPI app.
   # You can also set the `--server-variables` option to fill in template variables in the server URL.
   scripts.generate-elm-api.exec = ''
-    python ${config.devenv.root}/backend/gen_openapi.py
+    generate-openapi
 
     echo generating frontend/generated-api
     openapi-generator-cli generate \
-      --input-spec ${config.devenv.root}/frontend/openapi.json \
+      --input-spec ${config.devenv.root}/backend-rs/openapi.json \
       --enable-post-process-file \
       --generator-name elm \
       --template-dir ${config.devenv.root}/frontend/templates \
@@ -147,11 +138,17 @@ in
       --output ${config.devenv.root}/frontend/generated-api
   '';
 
+  scripts.generate-openapi.exec = ''
+    cd backend-rs && cargo run --bin gen-openapi
+  '';
+
   processes = {
     backend.exec = "cd ${config.devenv.root} && uvicorn --app-dir backend ${lib.optionalString (!config.container.isBuilding) "--reload"} flakestry.main:app";
     backend-rs.exec = "cd ${config.devenv.root}/backend-rs && cargo watch -x run";
-  } // lib.optionalAttrs (!config.container.isBuilding) {
-    frontend.exec = "cd ${config.devenv.root}/frontend && elm-land server";
+    frontend = {
+      exec = "cd ${config.devenv.root}/frontend && elm-land server";
+      process-compose.disabled = config.container.isBuilding;
+    };
   };
 
   containers.staging = mkContainer "staging";
@@ -166,14 +163,11 @@ in
     ${mkDeploy "production"}
   '';
 
+  pre-commit.settings.rust.cargoManifestPath = "./backend-rs/Cargo.toml";
   pre-commit.hooks = {
+    rustfmt.enable = true;
     shellcheck.enable = true;
-    #shellcheck.args = [ "--exclude=SC1090" ];
     nixpkgs-fmt.enable = true;
-    ruff.enable = true;
-    # Format with black until ruff gains auto-formatting capabilities
-    # https://github.com/astral-sh/ruff/issues/1904
-    black.enable = true;
     elm-format.enable = true;
   };
 }
