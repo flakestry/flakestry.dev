@@ -36,7 +36,6 @@ in
 
   packages = [
     pkgs.postgresql
-    pkgs.gnused
     pkgs.openssl
   ] ++ lib.optionals (!config.container.isBuilding) [
     pkgs.flyctl
@@ -144,10 +143,6 @@ in
       --template-dir ${config.devenv.root}/frontend/templates \
       --type-mappings object=JsonObject \
       --output ${config.devenv.root}/frontend/generated-api
-
-    # Replace cross-origin requests with requests to the same host
-    sed -i "s#Url.Builder.crossOrigin req.basePath req.pathParams#Url.Builder.absolute (\"api\" :: req.pathParams)#g" \
-      ${config.devenv.root}/frontend/generated-api/src/Api.elm
   '';
 
   processes = {
