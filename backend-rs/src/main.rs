@@ -22,7 +22,6 @@ use tracing::{field, info_span, Span};
 use tracing_subscriber::{fmt, EnvFilter};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::api::{get_flake, get_owner, post_publish};
 use crate::common::AppState;
 
 #[tokio::main]
@@ -80,6 +79,7 @@ fn app(state: Arc<AppState>) -> Router {
         .route("/flake", get(api::get_flake))
         .route("/flake/github/:owner", get(api::get_owner))
         .route("/flake/github/:owner/:repo", get(api::get_repo))
+        .route("/flake/github/:owner/:repo/:version", get(api::get_version))
         .route("/publish", post(api::post_publish));
 
     Router::new()

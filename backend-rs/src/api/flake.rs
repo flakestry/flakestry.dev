@@ -60,6 +60,42 @@ impl FromRow<'_, PgRow> for FlakeRelease {
 }
 
 #[derive(serde::Serialize)]
+pub struct Release {
+    #[serde(skip_serializing)]
+    id: i32,
+    repo_id: i32,
+    readme_filename: Option<String>,
+    readme: Option<String>,
+    version: String,
+    commit: String,
+    description: Option<String>,
+    created_at: NaiveDateTime,
+    meta_data: Option<Value>,
+    meta_data_errors: Option<Vec<String>>,
+    outputs: Option<Value>,
+    outputs_errors: Option<Vec<String>>,
+}
+
+impl FromRow<'_, PgRow> for Release {
+    fn from_row(row: &PgRow) -> sqlx::Result<Self> {
+        Ok(Self {
+            id: row.try_get("id")?,
+            repo_id: row.try_get("repo_id")?,
+            readme_filename: row.try_get("readme_filename").ok(),
+            readme: row.try_get("readme").ok(),
+            version: row.try_get("version")?,
+            commit: row.try_get("commit")?,
+            description: row.try_get("description").unwrap_or_default(),
+            created_at: row.try_get("created_at")?,
+            meta_data: row.try_get("meta_data").ok(),
+            meta_data_errors: row.try_get("meta_data_errors").ok(),
+            outputs: row.try_get("outputs").ok(),
+            outputs_errors: row.try_get("outputs_errors").ok(),
+        })
+    }
+}
+
+#[derive(serde::Serialize)]
 pub struct GetFlakeResponse {
     releases: Vec<FlakeRelease>,
     count: usize,
@@ -121,6 +157,14 @@ pub async fn get_repo(
     let releases = get_flakes_by_owner_and_repo(&state.pool, &owner, &repo).await?;
 
     Ok(Json(GetRepoResponse { releases }))
+}
+
+pub async fn get_version(
+    State(state): State<Arc<AppState>>,
+    Path((owner, repo, version)): Path<(String, String, String)>,
+) -> Result<Json<Release>, AppError> {
+    let release = get_release_by_owner_repo_version(&state.pool, &owner, &repo, &version).await?;
+    Ok(Json(release))
 }
 
 async fn get_flakes_by_ids(
@@ -226,6 +270,32 @@ async fn get_flakes_by_owner_and_repo(
     .context("Failed to fetch owner and repo from database")?;
 
     Ok(releases)
+}
+
+async fn get_release_by_owner_repo_version(
+    pool: &Pool<Postgres>,
+    owner: &str,
+    repo: &str,
+    version: &str,
+) -> Result<Release, AppError> {
+    let release: Option<Release> = sqlx::query_as(
+        "SELECT * \
+            FROM release \
+            INNER JOIN githubrepo ON githubrepo.id = release.repo_id \
+            INNER JOIN githubowner ON githubowner.id = githubrepo.owner_id \
+            WHERE githubowner.name = $1 AND githubrepo.name = $2 AND release.version = $3",
+    )
+    .bind(owner)
+    .bind(repo)
+    .bind(version)
+    .fetch_optional(pool)
+    .await
+    .context("Failed to fetch release by version from database")?;
+
+    match release {
+        Some(release) => Ok(release),
+        None => Err(AppError::NotFound),
+    }
 }
 
 async fn search_flakes(opensearch: &OpenSearch, q: &String) -> Result<HashMap<i32, f64>, AppError> {
