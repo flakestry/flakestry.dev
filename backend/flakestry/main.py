@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request, Response, status
 from fastapi.encoders import jsonable_encoder
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
@@ -16,21 +17,36 @@ if os.environ.get("SENTRY_DSN", None):
         traces_sample_rate=1.0,
     )
 
+base_path = os.environ.get("BASE_PATH", "localhost:8000")
+
 app = FastAPI(
     title="Flakestry.dev",
     version="0.0.1",
     # The subpath for our API.
     # Allows the API docs to find the correct path to the OpenAPI spec.
     root_path="/api",
-    # TODO: replace with actual URL from env/settings
     servers=[
-        {"url": "api"},
+        {"url": base_path},
     ],
 )
 
 # Override the default OpenAPI version.
 # openapi-generator does not currently support 3.1.0.
 app.openapi_version = "3.0.0"
+
+origins = [
+    "http://localhost",
+    "http://localhost:8000",
+    "http://localhost:1234",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.on_event("startup")

@@ -28,10 +28,12 @@ async fn main() {
     // TODO: read PG and OS host names from env variables
     // build our application with a single route
     dotenv::dotenv().ok();
+
     tracing_subscriber::registry()
         .with(fmt::layer().with_target(false))
         .with(EnvFilter::from_default_env())
         .init();
+
     let database_url = env::var("DATABASE_URL").expect("Failed to parse database url");
     let pool = PgPoolOptions::new()
         .connect(&database_url)

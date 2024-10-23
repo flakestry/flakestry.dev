@@ -32,6 +32,8 @@ let
   '';
 in
 {
+  env.DATABASE_URL = "postgres://flakestry@localhost:5431/";
+
   packages = [
     pkgs.postgresql
     pkgs.gnused
@@ -47,9 +49,6 @@ in
     pkgs.darwin.configd
     pkgs.darwin.dyld
   ];
-
-  # https://github.com/cachix/devenv/pull/745
-  env.LD_LIBRARY_PATH = "";
 
   languages.python = {
     enable = true;
@@ -67,12 +66,22 @@ in
 
   languages.rust = {
     enable = true;
-    # https://github.com/launchbadge/sqlx/blob/main/FAQ.md#what-versions-of-rust-does-sqlx-support-what-is-sqlxs-msrv
     channel = "stable";
   };
 
   services.opensearch.enable = !config.container.isBuilding;
-  services.postgres.enable = !config.container.isBuilding;
+  services.postgres = {
+    enable = !config.container.isBuilding;
+    listen_addresses = "localhost";
+    port = 5431;
+    initialDatabases = [
+      {
+        name = "flakestry";
+        user = "flakestry";
+        pass = "secret";
+      }
+    ];
+  };
   services.caddy.enable = true;
   services.caddy.virtualHosts.":8888" = {
     extraConfig = ''
@@ -110,7 +119,7 @@ in
         owner = "OpenAPITools";
         repo = "openapi-generator";
         rev = "v${pkgs.openapi-generator-cli.version}";
-        hash = "sha256-J3ukIIH4k6VsCF+FqUEaLcEeVrQcSfFeJrmAO8buhGw=";
+        hash = "sha256-9Gdkx/Ca6Zjb2lCV4Y9Gg4e4I1nkiVGUQVyUpCLAxuA=";
       };
     in
     ''

@@ -70,15 +70,10 @@ class Release(SQLModel, table=True):
     outputs_errors: Optional[str]
 
 
-host = os.environ.get("PGHOST", None)
-
-if host:
-    engine_url = f"postgresql+pg8000://{os.environ['USER']}@flakestry?unix_sock={host}/.s.PGSQL.5432"
-else:
-    scheme, rest = os.environ["DATABASE_URL"].split("://")
-    engine_url = f"postgresql+pg8000://{rest}"
-    # needed for pg8000
-    engine_url = engine_url.replace("?sslmode=disable", "")
+scheme, rest = os.environ["DATABASE_URL"].split("://")
+engine_url = f"postgresql+pg8000://{rest}"
+# needed for pg8000
+engine_url = engine_url.replace("?sslmode=disable", "")
 
 # https://community.fly.io/t/postgresql-connection-issues-have-returned/6424/6
 engine = create_engine(engine_url, pool_pre_ping=True)

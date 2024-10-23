@@ -1,6 +1,9 @@
 inputs:
-  nixpkgs:
-    url: github:NixOS/nixpkgs/nixos-unstable
+  fenix:
+    url: github:sandydoo/fenix/patch-rust-analyzer-preview
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
   nix2container:
     url: github:nlewo/nix2container
     inputs:
@@ -8,8 +11,3 @@ inputs:
         follows: nixpkgs
   mk-shell-bin:
     url: github:rrbutani/nix-mk-shell-bin
-  fenix:
-    url: github:sandydoo/fenix/patch-rust-analyzer-preview
-    inputs:
-      nixpkgs:
-        follows: nixpkgs
