@@ -37,6 +37,7 @@ app.openapi_version = "3.0.0"
 origins = [
     "http://localhost",
     "http://localhost:8000",
+    "http://localhost:3000",
     "http://localhost:1234",
 ]
 

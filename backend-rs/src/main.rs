@@ -8,6 +8,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use http::Method;
 use opensearch::{
     http::StatusCode,
     indices::{IndicesCreateParts, IndicesGetParts},
@@ -15,12 +16,13 @@ use opensearch::{
 };
 use sqlx::postgres::PgPoolOptions;
 use std::{env, net::SocketAddr, sync::Arc};
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing::{field, info_span, Span};
 use tracing_subscriber::{fmt, EnvFilter};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::api::{get_flake, post_publish};
+use crate::api::{get_flake, get_owner, post_publish};
 use crate::common::AppState;
 
 #[tokio::main]
@@ -68,11 +70,20 @@ async fn add_ip_trace(
 }
 
 fn app(state: Arc<AppState>) -> Router {
+    let cors = CorsLayer::new()
+        // allow `GET` and `POST` when accessing the resource
+        .allow_methods([Method::GET, Method::POST])
+        // allow requests from any origin
+        .allow_origin(Any);
+
     let api = Router::new()
         .route("/flake", get(get_flake))
+        .route("/flake/github/:owner", get(get_owner))
         .route("/publish", post(post_publish));
+
     Router::new()
         .nest("/api", api)
+        .layer(cors)
         .layer(middleware::from_fn(add_ip_trace))
         .layer(
             TraceLayer::new_for_http()

@@ -33,6 +33,7 @@ let
 in
 {
   env.DATABASE_URL = "postgres://flakestry@localhost:5431/";
+  env.BASE_PATH = "localhost:3000/api";
 
   packages = [
     pkgs.postgresql

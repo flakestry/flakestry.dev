@@ -1,6 +1,6 @@
 use anyhow::Context;
 use axum::{
-    extract::{Query, State},
+    extract::{Path, Query, State},
     Json,
 };
 use chrono::NaiveDateTime;
@@ -11,7 +11,7 @@ use std::{cmp::Ordering, collections::HashMap, sync::Arc};
 
 use crate::common::{AppError, AppState};
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Eq)]
 struct FlakeRelease {
     #[serde(skip_serializing)]
     id: i32,
@@ -21,8 +21,6 @@ struct FlakeRelease {
     description: String,
     created_at: NaiveDateTime,
 }
-
-impl Eq for FlakeRelease {}
 
 impl Ord for FlakeRelease {
     fn cmp(&self, other: &Self) -> Ordering {
@@ -62,6 +60,11 @@ pub struct GetFlakeResponse {
     query: Option<String>,
 }
 
+#[derive(serde::Serialize)]
+pub struct GetOwnerResponse {
+    repos: Vec<FlakeRelease>,
+}
+
 pub async fn get_flake(
     State(state): State<Arc<AppState>>,
     Query(mut params): Query<HashMap<String, String>>,
@@ -81,12 +84,23 @@ pub async fn get_flake(
     } else {
         get_flakes(&state.pool).await?
     };
+
     let count = releases.len();
-    return Ok(Json(GetFlakeResponse {
+
+    Ok(Json(GetFlakeResponse {
         releases,
         count,
         query,
-    }));
+    }))
+}
+
+pub async fn get_owner(
+    State(state): State<Arc<AppState>>,
+    Path(owner): Path<String>,
+) -> Result<Json<GetOwnerResponse>, AppError> {
+    let repos = get_flakes_by_owner(&state.pool, &owner).await?;
+
+    Ok(Json(GetOwnerResponse { repos }))
 }
 
 async fn get_flakes_by_ids(
@@ -113,8 +127,7 @@ async fn get_flakes_by_ids(
             WHERE release.id IN ({param_string})",
     );
 
-    let releases: Vec<FlakeRelease> = 
-        sqlx::query_as(&query)
+    let releases: Vec<FlakeRelease> = sqlx::query_as(&query)
         .fetch_all(pool)
         .await
         .context("Failed to fetch flakes by id from database")?;
@@ -138,6 +151,31 @@ async fn get_flakes(pool: &Pool<Postgres>) -> Result<Vec<FlakeRelease>, AppError
     .fetch_all(pool)
     .await
     .context("Failed to fetch flakes from database")?;
+
+    Ok(releases)
+}
+
+async fn get_flakes_by_owner(
+    pool: &Pool<Postgres>,
+    owner: &str,
+) -> Result<Vec<FlakeRelease>, AppError> {
+    let releases: Vec<FlakeRelease> = sqlx::query_as(
+        "SELECT release.id AS id, \
+            githubowner.name AS owner, \
+            githubrepo.name AS repo, \
+            release.version AS version, \
+            release.description AS description, \
+            release.created_at AS created_at \
+            FROM release \
+            INNER JOIN githubrepo ON githubrepo.id = release.repo_id \
+            INNER JOIN githubowner ON githubowner.id = githubrepo.owner_id \
+            WHERE githubowner.name = $1 \
+            ORDER BY release.created_at DESC LIMIT 100",
+    )
+    .bind(owner)
+    .fetch_all(pool)
+    .await
+    .context("Failed to fetch owner from database")?;
 
     Ok(releases)
 }
