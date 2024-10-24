@@ -143,8 +143,7 @@ in
   '';
 
   processes = {
-    backend.exec = "cd ${config.devenv.root} && uvicorn --app-dir backend ${lib.optionalString (!config.container.isBuilding) "--reload"} flakestry.main:app";
-    backend-rs.exec = "cd ${config.devenv.root}/backend-rs && cargo watch -x run";
+    backend.exec = "cd ${config.devenv.root}/backend-rs && cargo watch -x run";
     frontend = {
       exec = "cd ${config.devenv.root}/frontend && elm-land server";
       process-compose.disabled = config.container.isBuilding;
